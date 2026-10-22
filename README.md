@@ -1,36 +1,174 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Savala AI — Full-Stack AI Interview & Coding Workspace
 
-## Getting Started
+Savala AI is a high-performance, browser-based AI interview preparation and coding assistant built with Next.js App Router, TypeScript (strict mode), Tailwind CSS, PostgreSQL, Prisma ORM, and official Google Gemini & OpenAI SDKs.
 
-First, run the development server:
+---
+
+## 🚀 Core Capabilities
+
+1. **AI-Powered Mock Interview Practice Room**
+   - Microphone recording with browser `MediaRecorder` and `getUserMedia` APIs.
+   - Recording timer, audio wave visualization, and permission lifecycle handling.
+   - Speech-to-text transcription adapter (OpenAI Whisper API).
+   - Editable transcript panel with instant word count, copy, clear, and persistence.
+   - AI interview coaching: answer evaluation, STAR-format model answers, and deep-dive technical concept breakdowns.
+
+2. **Coding Lab Assistant**
+   - Interactive code editor with line numbers and monospace styling.
+   - Multi-language support: **TypeScript, JavaScript, Python, Java, SQL, PHP**.
+   - One-click actions: **Solve Problem**, **Debug Code**, **Explain Code**, and **Review Code**.
+   - Algorithmic analysis with **Time Complexity** ($O$), **Space Complexity**, **Edge Cases**, and suggested unit tests.
+
+3. **My Resume Management**
+   - In-memory PDF and TXT file parsing via server-side `unpdf`.
+   - File size limits (up to 10MB) and MIME type validation.
+   - Automatic extraction of candidate technical summary and core competency tags.
+   - AI generation of 5 tailored interview questions based directly on the candidate's resume projects.
+   - One-click "Practice in Practice Room" shortcut for every extracted question.
+   - Privacy controls: replace resume or permanently delete stored text.
+
+4. **Persistent Session History & Dashboard**
+   - Real metrics: total practice sessions, total speaking minutes, resume status, and active AI engine.
+   - Filterable session history (All, Interview, Coding) with details modal.
+   - Privacy controls to clear individual sessions or wipe all records.
+
+5. **Switchable AI Text-Generation Providers**
+   - Support for both **Google Gemini** (via official `@google/genai` SDK) and **OpenAI** (via official `openai` SDK).
+   - Dynamic provider switching in Settings with model verification and fallback.
+   - Secure server-side secret management: API keys are never stored in browser localStorage or exposed in client responses.
+
+---
+
+## 🎨 Brand Identity & Design System
+
+The application strictly implements the Savala AI design tokens:
+
+| Token | Hex | Role |
+| :--- | :--- | :--- |
+| **ICE SILVER** | `#DDE3E8` | Primary light background, panels, form fields, and subtle separators |
+| **DEEP AUBERGINE** | `#3A0F34` | Fixed desktop sidebar, brand elements, headings, and strong interface surfaces |
+| **MARIGOLD** | `#EAAA00` | Primary CTAs, active recording indicators, selected navigation badges, highlights |
+
+CSS custom properties are defined in `src/app/globals.css`.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Framework**: Next.js 16 (App Router with Turbopack)
+- **Language**: TypeScript (Strict Mode)
+- **Styling**: Tailwind CSS v4 with custom brand tokens
+- **Icons**: Lucide Icons
+- **Database & ORM**: MongoDB + Prisma ORM (v6.19.3)
+- **AI SDKs**: Official Google GenAI (`@google/genai`) and OpenAI (`openai`)
+- **Speech-to-Text**: Dedicated OpenAI Whisper STT adapter
+- **PDF Extraction**: Server-side `unpdf`
+- **Validation**: Zod v4 schemas on all API routes
+
+---
+
+## 📋 Environment Variables Setup
+
+Copy `.env.example` to `.env.local`:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Configure your credentials:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```ini
+# MongoDB Connection URL (Local or MongoDB Atlas)
+DATABASE_URL="mongodb://localhost:27017/savala_ai?authSource=admin"
+# MongoDB Atlas Example:
+# DATABASE_URL="mongodb+srv://<username>:<password>@cluster0.example.mongodb.net/savala_ai?retryWrites=true&w=majority"
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Google Gemini (https://aistudio.google.com/)
+GEMINI_API_KEY="your-gemini-api-key"
+GEMINI_MODEL="gemini-2.5-flash"
 
-## Learn More
+# OpenAI (https://platform.openai.com/)
+OPENAI_API_KEY="your-openai-api-key"
+OPENAI_MODEL="gpt-4o-mini"
 
-To learn more about Next.js, take a look at the following resources:
+# Speech-to-Text Transcription
+TRANSCRIPTION_PROVIDER="openai"
+TRANSCRIPTION_API_KEY="" # Defaults to OPENAI_API_KEY if left blank
+TRANSCRIPTION_MODEL="whisper-1"
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Security & Limits
+AUTH_SECRET="savala-super-secret-key-change-in-production-min-32-chars-long"
+MAX_UPLOAD_MB="10"
+DEFAULT_AI_PROVIDER="gemini"
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 💻 Local Development
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 1. Install Dependencies
+```bash
+npm install
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 2. Generate Prisma Client for MongoDB
+```bash
+npx prisma generate
+```
+
+### 3. Sync Database Indexes (MongoDB)
+If your MongoDB instance is running:
+```bash
+npx prisma db push
+```
+*(Note: If running without a live MongoDB instance locally, Savala AI includes a resilient file-based store fallback in `.savala_data/` so that all sessions, resumes, and settings persist seamlessly even before MongoDB is provisioned).*
+
+### 4. Run Development Server
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+---
+
+## 🧪 Testing and Quality Assurance
+
+Run the test suite:
+```bash
+npm test
+```
+
+Run TypeScript strict check:
+```bash
+npx tsc --noEmit
+```
+
+Run ESLint:
+```bash
+npm run lint
+```
+
+Build for production:
+```bash
+npm run build
+```
+
+---
+
+## 🌐 Production Deployment (Vercel)
+
+1. Push code to your Git repository.
+2. Import project into Vercel.
+3. Provision a PostgreSQL database (e.g. Vercel Postgres, Supabase, Neon, or Railway).
+4. Add the environment variables (`DATABASE_URL`, `GEMINI_API_KEY`, `OPENAI_API_KEY`, `AUTH_SECRET`, etc.) in Vercel Project Settings.
+5. In build commands, ensure `prisma generate` is executed (configured automatically via `postinstall` in `package.json`).
+6. Deploy. Note that HTTPS is automatically enabled by Vercel, providing full secure microphone access for browser recording.
+
+---
+
+## 🔒 Security & Privacy Architecture
+
+- **No Public Files**: Uploaded resumes and recorded audio files are processed in-memory and never exposed via public URLs or unauthenticated static buckets.
+- **Microphone Lifecycles**: All media streams and tracks are explicitly released when recording stops or when components unmount.
+- **Server-Side Secret Isolation**: Provider API keys are never bundled into client JS, never stored in browser cookies/localStorage, and never returned in API payloads.
+- **Authorization**: All CRUD operations on resumes and sessions are strictly scoped to the authenticated user ID.

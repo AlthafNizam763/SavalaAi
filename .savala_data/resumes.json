@@ -1,0 +1,26 @@
+[
+  {
+    "id": "res_1792673837778_pq98",
+    "userId": "usr_savala_lead_eng",
+    "fileName": "ALTHAFN.pdf",
+    "fileSizeBytes": 107271,
+    "mimeType": "application/pdf",
+    "extractedText": "A L T H A F N\nF U L L S T A C K D E V E L O P E R+91 9633146330althafnizam763@gmail.com\nPROFESSIONAL SUMMARYFull Stack Developer with 2 years of experience in designing, developing, and maintaining scalable web\napplications using Laravel, CodeIgniter 3/4, Node.js, React.js, Next.js, MySQL, PostgreSQL, and MongoDB.\nExperienced in developing REST APIs, authentication systems, enterprise HRMS applications, database\noptimization, and backend architecture. Passionate about building secure, high-performance applications\nand continuously learning modern technologies.\nTECHNICAL SKILLSLanguages: PHP, JavaScript (ES6+), TypeScript, HTML5, CSS3\nFrontend: React.js, Next.js, Bootstrap, Tailwind CSS, jQuery, Redux\nBackend: Laravel, CodeIgniter 3, CodeIgniter 4, Node.js, Express.js\nDatabase: MySQL, PostgreSQL, MongoDB,\nAPI & Authentication: REST APIs, JWT Authentication, Authentication & Authorization, Role-Based Access\nControl (RBAC)\nTools: Git, GitHub, Postman, VS Code, Figma\nOthers: AI Prompt Engineering, Responsive Web DesignPortfolio\nPROFESSIONAL EXPERIENCEDOCME CLOUD SOLUTIONS - SOFTWARE DEVELOPER2024-NOWDeveloped scalable web applications using Laravel, CodeIgniter, and Node.js.\nDesigned and implemented secure REST APIs.\nBuilt reusable backend modules following clean architecture principles.\nIntegrated MySQL, PostgreSQL, and MongoDB databases.\nWorked closely with frontend developers using React.js and Next.js.\nOptimized SQL queries and application performance.\nFixed production bugs and implemented new business requirements.\nParticipated in code reviews and deployment activities.\nWorked in Agile development environments.TRIVANDRUM,\nPROJECTSLOYALTRIA modern SaaS-based HRMS platform built to simplify HR operations, from recruitment and onboarding to payroll and\nanalytics. Loyaltri reimagines HR software with AI-driven solutions, real-time insights, and an employee-first approach.2024Built a scalable HRMS SaaS platform for businesses in education, healthcare, and corporate sectors.\nUsed React.js for frontend, PHP (CodeIgniter) for backend, and PostgreSQL for database.\nContribute to Loyaltri GROWTH backend development using Node.js.\nImplemented secure authentication, automated payroll, and digital onboarding.\nIntegrated role-based access control and advanced people analytics.\nDesigned a responsive and intuitive UI for web and mobile.\nScaled platform to 5,000+ active users across India and GCC, with offices in Dubai, Kochi, Trivandrum, and\nCoimbatore.\n\nPUMP2HOMEAn on-demand fuel delivery platform that allows users to order fuel anytime, anywhere. This project is a full-stack web\napplication built using MySQL, Laravel, HTML, CSS, and PHP. It ensures secure order management, real-time updates, and\nseamless customer experience through efficient backend logic and responsive UI.2023Built an on-demand fuel delivery platform.\nUsed Laravel, MySQL, PHP, HTML, and CSS for full-stack development.\nImplemented secure authentication and order tracking.\nAdded real-time order status updates and notifications.\nDesigned a responsive UI for a smooth user experience.EDUCATIONComputer Science EngineeringYOUNUS COLLEGE OF POLYTECHNIC2021-2024DIRECTORATE OF TECHNICAL EDUCATION, KERALA, INDIA\nSUMMER INTERNSHIPWorked on developing Python scripts, building and training ML models, and integrating robotics hardware with\nsoftware. Gained hands-on experience in NumPy, Pandas, Scikit-learn, and OpenCV. Contributed to\nautomation, testing, debugging, and optimizing code, while collaborating with the team on innovative ML and\nrobotics projects.LOGIPROMPT TECHNO SOLUTIONSThiruvananthapuram, 2023\nADDITIONAL SKILLSProblem Solving\nTeam Collaboration\nAgile Methodology\nDebugging\nSoftware Maintenance\nPerformance Optimization",
+    "parsedSummary": "Technical candidate with full-stack and systems engineering background.",
+    "parsedSkills": [
+      "Software Engineering",
+      "Full-Stack",
+      "Web Architecture"
+    ],
+    "parsedExperience": "Experience extracted and indexed for interview simulation.",
+    "interviewQuestions": [
+      "Can you describe an architectural challenge you faced in your most recent project and how you solved it?",
+      "How do you ensure test coverage, code quality, and maintainability in a fast-moving codebase?",
+      "Walk us through a critical production bug you investigated and how you resolved the root cause.",
+      "How do you approach database schema migrations and data integrity under high traffic?",
+      "Describe how you collaborate across product, design, and engineering teams to deliver high-impact features."
+    ],
+    "createdAt": "2026-10-22T12:57:17.778Z",
+    "updatedAt": "2026-10-22T12:57:17.778Z"
+  }
+]

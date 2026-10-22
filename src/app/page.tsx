@@ -1,69 +1,196 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useState, useEffect } from "react";
+import { AppShell, NavTab } from "@/components/layout/AppShell";
+import { DashboardView } from "@/components/dashboard/DashboardView";
+import { MeetingCopilotView } from "@/components/meeting/MeetingCopilotView";
+import { PracticeRoomView } from "@/components/practice/PracticeRoomView";
+import { CodingLabView } from "@/components/coding/CodingLabView";
+import { ResumeView } from "@/components/resume/ResumeView";
+import { HistoryView } from "@/components/history/HistoryView";
+import { SettingsView } from "@/components/settings/SettingsView";
+import { SessionData, ResumeData, UserSettingsData, AppUser } from "@/types";
+
+export default function SavalaWorkspacePage() {
+  const [currentTab, setCurrentTab] = useState<NavTab>("dashboard");
+  const [user, setUser] = useState<AppUser | null>(null);
+  const [settings, setSettings] = useState<UserSettingsData | null>(null);
+  const [sessions, setSessions] = useState<SessionData[]>([]);
+  const [resume, setResume] = useState<ResumeData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [practiceQuestion, setPracticeQuestion] = useState<string | undefined>(undefined);
+
+  // Fetch all initial workspace data on mount
+  useEffect(() => {
+    let isMounted = true;
+
+    async function initWorkspace() {
+      try {
+        const [userRes, settingsRes, sessionsRes, resumeRes] = await Promise.allSettled([
+          fetch("/api/auth/me"),
+          fetch("/api/settings"),
+          fetch("/api/sessions"),
+          fetch("/api/resume"),
+        ]);
+
+        if (!isMounted) return;
+
+        if (userRes.status === "fulfilled" && userRes.value.ok) {
+          const userData = await userRes.value.json();
+          if (userData.user && isMounted) setUser(userData.user);
+        }
+
+        if (settingsRes.status === "fulfilled" && settingsRes.value.ok) {
+          const settingsData = await settingsRes.value.json();
+          if (settingsData.settings && isMounted) setSettings(settingsData.settings);
+        }
+
+        if (sessionsRes.status === "fulfilled" && sessionsRes.value.ok) {
+          const sessionsData = await sessionsRes.value.json();
+          if (sessionsData.sessions && isMounted) setSessions(sessionsData.sessions);
+        }
+
+        if (resumeRes.status === "fulfilled" && resumeRes.value.ok) {
+          const resumeData = await resumeRes.value.json();
+          if (resumeData.resume && isMounted) setResume(resumeData.resume);
+        }
+      } catch (err) {
+        console.error("Failed to load workspace data", err);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+
+    initWorkspace();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleRefreshResume = async () => {
+    try {
+      const res = await fetch("/api/resume");
+      if (res.ok) {
+        const data = await res.json();
+        setResume(data.resume || null);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleRefreshSessions = async () => {
+    try {
+      const res = await fetch("/api/sessions");
+      if (res.ok) {
+        const data = await res.json();
+        setSessions(data.sessions || []);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleSessionSaved = (newSession: SessionData) => {
+    setSessions((prev) => [newSession, ...prev]);
+  };
+
+  const handlePracticeQuestionFromResume = (question: string) => {
+    setPracticeQuestion(question);
+    setCurrentTab("practice");
+  };
+
+  const handleClearAllHistory = async () => {
+    if (!window.confirm("Are you sure you want to delete all practice history?")) return;
+    try {
+      const res = await fetch("/api/sessions", { method: "DELETE" });
+      if (res.ok) {
+        setSessions([]);
+        alert("All sessions have been deleted.");
+      }
+    } catch {
+      alert("Failed to clear sessions.");
+    }
+  };
+
+  const handleClearResume = async () => {
+    if (!window.confirm("Are you sure you want to delete your resume?")) return;
+    try {
+      const res = await fetch("/api/resume", { method: "DELETE" });
+      if (res.ok) {
+        setResume(null);
+        alert("Resume has been deleted.");
+      }
+    } catch {
+      alert("Failed to delete resume.");
+    }
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <AppShell
+      currentTab={currentTab}
+      onSelectTab={setCurrentTab}
+      settings={settings}
+      user={user}
+    >
+      {currentTab === "dashboard" && (
+        <DashboardView
+          sessions={sessions}
+          resume={resume}
+          settings={settings}
+          user={user}
+          onNavigate={setCurrentTab}
+          isLoading={isLoading}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      )}
+
+      {currentTab === "meeting" && (
+        <MeetingCopilotView
+          settings={settings}
+          resume={resume}
+        />
+      )}
+
+      {currentTab === "practice" && (
+        <PracticeRoomView
+          settings={settings}
+          onSessionSaved={handleSessionSaved}
+          initialQuestion={practiceQuestion}
+        />
+      )}
+
+      {currentTab === "coding" && (
+        <CodingLabView
+          settings={settings}
+          onSessionSaved={handleSessionSaved}
+        />
+      )}
+
+      {currentTab === "resume" && (
+        <ResumeView
+          resume={resume}
+          onRefreshResume={handleRefreshResume}
+          onPracticeQuestion={handlePracticeQuestionFromResume}
+        />
+      )}
+
+      {currentTab === "history" && (
+        <HistoryView
+          sessions={sessions}
+          onRefreshSessions={handleRefreshSessions}
+          isLoading={isLoading}
+        />
+      )}
+
+      {currentTab === "settings" && (
+        <SettingsView
+          settings={settings}
+          onSettingsUpdated={setSettings}
+          onClearHistory={handleClearAllHistory}
+          onClearResume={handleClearResume}
+        />
+      )}
+    </AppShell>
   );
 }

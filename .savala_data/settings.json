@@ -1,0 +1,16 @@
+{
+  "usr_savala_lead_eng": {
+    "id": "settings_usr_savala_lead_eng",
+    "userId": "usr_savala_lead_eng",
+    "activeProvider": "gemini",
+    "preferredModel": "gemini-2.5-flash",
+    "audioAutoTranscribe": true,
+    "dataRetentionDays": 30,
+    "defaultJobRole": "Full-Stack Software Engineer",
+    "interviewDifficulty": "Medium",
+    "geminiConfigured": false,
+    "openaiConfigured": false,
+    "transcriptionConfigured": false,
+    "transcriptionProvider": "openai"
+  }
+}

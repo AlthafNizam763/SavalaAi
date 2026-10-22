@@ -1,0 +1,95 @@
+// Prisma schema for Savala AI with MongoDB
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String            @id @default(cuid()) @map("_id")
+  email        String            @unique
+  name         String?
+  passwordHash String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  
+  settings     UserSettings?
+  sessions     PracticeSession[]
+  resumes      Resume[]
+
+  @@map("users")
+}
+
+model UserSettings {
+  id                   String   @id @default(cuid()) @map("_id")
+  userId               String   @unique
+  activeProvider       String   @default("gemini") // "gemini" | "openai"
+  preferredModel       String   @default("gemini-2.5-flash")
+  audioAutoTranscribe  Boolean  @default(true)
+  dataRetentionDays    Int      @default(30)
+  defaultJobRole       String   @default("Full-Stack Software Engineer")
+  interviewDifficulty  String   @default("Medium") // "Junior" | "Medium" | "Senior" | "Staff"
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
+}
+
+model Resume {
+  id                 String   @id @default(cuid()) @map("_id")
+  userId             String
+  fileName           String
+  fileSizeBytes      Int
+  mimeType           String
+  extractedText      String
+  parsedSummary      String?
+  parsedSkills       String?  // JSON string array
+  parsedExperience   String?  // JSON array or formatted markdown
+  parsedEducation    String?
+  interviewQuestions String?  // Suggested questions based on resume
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("resumes")
+}
+
+model PracticeSession {
+  id              String           @id @default(cuid()) @map("_id")
+  userId          String
+  title           String
+  sessionType     String           @default("interview") // "interview" | "coding" | "transcript_review"
+  status          String           @default("completed") // "draft" | "in_progress" | "completed"
+  transcriptText  String?
+  durationSeconds Int              @default(0)
+  targetRole      String?
+  notes           String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  messages        SessionMessage[]
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("practice_sessions")
+}
+
+model SessionMessage {
+  id          String          @id @default(cuid()) @map("_id")
+  sessionId   String
+  role        String          // "user" | "assistant" | "system"
+  content     String
+  provider    String?         // "gemini" | "openai"
+  model       String?
+  createdAt   DateTime        @default(now())
+
+  session     PracticeSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@map("session_messages")
+}
