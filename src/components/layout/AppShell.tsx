@@ -108,8 +108,8 @@ export const AppShell: React.FC<AppShellProps> = ({
         }`}
       >
         {/* Brand Header */}
-        <div className="flex h-20 items-center justify-between border-b border-white/10 px-6">
-          <BrandLogo size="md" />
+        <div className="flex h-20 items-center justify-between border-b border-white/10 px-6 flex-shrink-0">
+          <BrandLogo size="md" variant="dark" />
           <button
             onClick={() => setMobileOpen(false)}
             className="rounded-lg p-1.5 text-[#DDE3E8] hover:bg-white/10 lg:hidden"

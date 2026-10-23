@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import {
   Mic,
   Code2,
@@ -42,8 +43,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   return (
     <div className="space-y-8">
-      {/* Welcome Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-[#3A0F34] p-6 sm:p-8 text-white shadow-sm border border-[#3A0F34]">
+      {/* Welcome Banner with Official Savala Mascot */}
+      <div className="relative overflow-hidden rounded-2xl bg-[#3A0F34] p-6 sm:p-8 text-white shadow-sm border border-[#3A0F34] flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="relative z-10 max-w-2xl space-y-4">
           <div className="inline-flex items-center gap-2 rounded-full bg-[#EAAA00]/20 px-3 py-1 text-xs font-semibold text-[#EAAA00] border border-[#EAAA00]/30">
             <Sparkles className="h-3.5 w-3.5" />
@@ -57,9 +58,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             Practice realistic mock interview questions with microphone audio recording, solve algorithmic challenges in the Coding Lab, and analyze your resume for targeted technical questions.
           </p>
 
+          <div className="flex flex-wrap items-center gap-3 pt-2">
             <button
               onClick={() => onNavigate("meeting")}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#EAAA00] px-5 py-3 text-sm font-bold text-[#270A23] shadow-sm hover:bg-[#CF9400] transition-colors"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#EAAA00] px-5 py-3 text-sm font-bold text-[#270A23] shadow-sm hover:bg-[#CF9400] transition-colors cursor-pointer"
             >
               <Video className="h-4 w-4" />
               <span>Launch Meeting Copilot</span>
@@ -67,7 +69,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
             <button
               onClick={() => onNavigate("practice")}
-              className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white hover:bg-white/15 transition-colors"
+              className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white hover:bg-white/15 transition-colors cursor-pointer"
             >
               <Mic className="h-4 w-4" />
               <span>Practice Room</span>
@@ -75,11 +77,29 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
             <button
               onClick={() => onNavigate("coding")}
-              className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white hover:bg-white/15 transition-colors"
+              className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white hover:bg-white/15 transition-colors cursor-pointer"
             >
               <Code2 className="h-4 w-4" />
               <span>Coding Lab</span>
             </button>
+          </div>
+        </div>
+
+        {/* Mascot Character Showcase */}
+        <div className="relative z-10 flex-shrink-0 flex flex-col items-center">
+          <div className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-3xl bg-white/10 border-2 border-[#EAAA00]/40 p-3 shadow-xl backdrop-blur-xs flex items-center justify-center transform hover:scale-105 transition-transform">
+            <Image
+              src="/logo.png"
+              alt="Savala AI Samurai Mascot"
+              width={160}
+              height={160}
+              className="w-full h-full object-contain filter drop-shadow-md"
+              priority
+            />
+          </div>
+          <span className="mt-2 text-[11px] font-bold tracking-wider text-[#EAAA00] uppercase bg-black/30 px-2.5 py-0.5 rounded-full border border-[#EAAA00]/20">
+            Savala Ninja Sensei
+          </span>
         </div>
 
         {/* Ambient background decoration */}
