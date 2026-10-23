@@ -149,6 +149,7 @@ export default function SavalaWorkspacePage() {
         <MeetingCopilotView
           settings={settings}
           resume={resume}
+          onNavigateSettings={() => setCurrentTab("settings")}
         />
       )}
 

@@ -11,7 +11,7 @@ export type AIAction =
   | "resume_analysis"
   | "generate_questions";
 
-export type AnswerLanguage = "en" | "ml" | "ml-en";
+export type AnswerLanguage = "en" | "ml" | "ml-en" | "manglish";
 
 export type MeetingPlatform = "google_meet" | "microsoft_teams" | "other";
 
@@ -22,8 +22,10 @@ export interface LiveDetectedQuestion {
   timestamp: string;
   text: string;
   category?: "technical" | "behavioral" | "system_design" | "general";
-  isAnswered: boolean;
+  isAnswered?: boolean;
+  status?: "pending" | "answered";
   confidence: number;
+  language?: string;
 }
 
 export interface LiveSuggestedAnswer {
@@ -126,6 +128,8 @@ export interface UserSettingsData {
   userId: string;
   activeProvider: AIProvider;
   preferredModel: string;
+  activeProviderConfigId?: string | null;
+  activeProviderName?: string | null;
   audioAutoTranscribe: boolean;
   dataRetentionDays: number;
   defaultJobRole: string;
@@ -134,6 +138,41 @@ export interface UserSettingsData {
   openaiConfigured: boolean;
   transcriptionConfigured: boolean;
   transcriptionProvider: string;
+  configuredProvidersCount?: number;
+}
+
+export interface ProviderConfigData {
+  id: string;
+  userId: string;
+  name: string;
+  providerType: AIProvider;
+  model: string;
+  maskedKey: string;
+  isActive: boolean;
+  isEnabled: boolean;
+  customEndpoint?: string | null;
+  lastTestedAt?: string | null;
+  testStatus?: "verified" | "failed" | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateProviderConfigInput {
+  name: string;
+  providerType: AIProvider;
+  apiKey: string;
+  model: string;
+  customEndpoint?: string;
+  isActive?: boolean;
+}
+
+export interface UpdateProviderConfigInput {
+  name?: string;
+  apiKey?: string;
+  model?: string;
+  customEndpoint?: string;
+  isActive?: boolean;
+  isEnabled?: boolean;
 }
 
 export interface AppUser {

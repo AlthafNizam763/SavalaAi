@@ -40,14 +40,12 @@ export const ResumeView: React.FC<ResumeViewProps> = ({
     setUploadError(null);
     setUploadSuccess(null);
 
-    // Validate size (10MB limit)
     const maxMb = 10;
     if (file.size > maxMb * 1024 * 1024) {
       setUploadError(`File exceeds maximum allowed size of ${maxMb}MB.`);
       return;
     }
 
-    // Validate extension
     const name = file.name.toLowerCase();
     if (!name.endsWith(".pdf") && !name.endsWith(".txt") && !name.endsWith(".md")) {
       setUploadError("Invalid file type. Please upload a PDF (.pdf) or text (.txt) file.");
@@ -108,10 +106,10 @@ export const ResumeView: React.FC<ResumeViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Page Title */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#CBD5DD] pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-[#3A0F34]">My Resume</h1>
-          <p className="text-xs sm:text-sm text-[#58505C]">
+          <h1 className="text-xl sm:text-2xl font-extrabold text-white">My Resume</h1>
+          <p className="text-xs text-[#737373] mt-1">
             Upload your technical resume to automatically extract skills, build targeted mock questions, and practice real scenarios.
           </p>
         </div>
@@ -120,7 +118,7 @@ export const ResumeView: React.FC<ResumeViewProps> = ({
           <button
             onClick={handleDeleteResume}
             disabled={isDeleting}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3.5 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50 transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-rose-500/20 bg-rose-500/10 px-3.5 py-1.5 text-xs font-semibold text-rose-300 hover:bg-rose-500/20 disabled:opacity-50 transition-colors cursor-pointer"
           >
             <Trash2 className="h-3.5 w-3.5" />
             <span>{isDeleting ? "Deleting..." : "Delete Resume"}</span>
@@ -130,15 +128,15 @@ export const ResumeView: React.FC<ResumeViewProps> = ({
 
       {/* Notifications */}
       {uploadError && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-xs text-red-800 flex items-start gap-3">
-          <AlertCircle className="h-4 w-4 text-red-600 flex-shrink-0 mt-0.5" />
+        <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-4 text-xs text-rose-300 flex items-start gap-3">
+          <AlertCircle className="h-4 w-4 text-rose-400 flex-shrink-0 mt-0.5" />
           <div className="flex-1 font-medium">{uploadError}</div>
         </div>
       )}
 
       {uploadSuccess && (
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-xs text-emerald-800 flex items-start gap-3">
-          <CheckCircle2 className="h-4 w-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+        <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-xs text-emerald-300 flex items-start gap-3">
+          <CheckCircle2 className="h-4 w-4 text-emerald-400 flex-shrink-0 mt-0.5" />
           <div className="flex-1 font-medium">{uploadSuccess}</div>
         </div>
       )}
@@ -152,7 +150,7 @@ export const ResumeView: React.FC<ResumeViewProps> = ({
           const file = e.dataTransfer.files?.[0];
           if (file) handleFileUpload(file);
         }}
-        className="rounded-2xl border-2 border-dashed border-[#CBD5DD] bg-white p-8 text-center hover:border-[#3A0F34] hover:bg-[#F4F7F9] cursor-pointer transition-all space-y-3"
+        className="rounded-2xl border-2 border-dashed border-white/[0.12] bg-white/[0.02] p-8 text-center hover:border-white/30 hover:bg-white/[0.04] cursor-pointer transition-all space-y-3"
       >
         <input
           ref={fileInputRef}
@@ -162,29 +160,29 @@ export const ResumeView: React.FC<ResumeViewProps> = ({
           className="hidden"
         />
 
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#DDE3E8]/60 text-[#3A0F34]">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-white">
           {isUploading ? (
-            <Loader2 className="h-7 w-7 animate-spin text-[#EAAA00]" />
+            <Loader2 className="h-7 w-7 animate-spin text-white" />
           ) : (
             <Upload className="h-7 w-7" />
           )}
         </div>
 
         <div className="space-y-1">
-          <h3 className="text-sm font-bold text-[#1F1722]">
+          <h3 className="text-sm font-bold text-white">
             {isUploading
               ? "Parsing document and extracting skills..."
               : resume
               ? "Click or drag to replace your resume"
               : "Upload your resume (PDF or TXT)"}
           </h3>
-          <p className="text-xs text-[#58505C]">
+          <p className="text-xs text-[#737373]">
             Max 10MB. Files are processed securely in memory and never shared publicly.
           </p>
         </div>
 
-        <div className="inline-flex items-center gap-1.5 rounded-full bg-[#DDE3E8] px-3 py-1 text-[11px] font-semibold text-[#3A0F34]">
-          <Shield className="h-3.5 w-3.5 text-[#3A0F34]" />
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold text-white">
+          <Shield className="h-3.5 w-3.5 text-white" />
           <span>Private & Encrypted Parsing</span>
         </div>
       </div>
@@ -193,14 +191,14 @@ export const ResumeView: React.FC<ResumeViewProps> = ({
       {resume && (
         <div className="space-y-6">
           {/* File Metadata Banner */}
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#CBD5DD] bg-white p-4 shadow-xs">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 shadow-xs">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#3A0F34] text-[#EAAA00]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 text-white">
                 <FileCheck className="h-5 w-5" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-[#1F1722]">{resume.fileName}</h4>
-                <span className="text-xs text-[#58505C]">
+                <h4 className="text-sm font-bold text-white">{resume.fileName}</h4>
+                <span className="text-xs text-[#737373]">
                   {(resume.fileSizeBytes / 1024).toFixed(1)} KB · Uploaded on{" "}
                   {new Date(resume.createdAt).toLocaleDateString()}
                 </span>
@@ -209,7 +207,7 @@ export const ResumeView: React.FC<ResumeViewProps> = ({
 
             <button
               onClick={() => setShowRawText(!showRawText)}
-              className="inline-flex items-center gap-1 text-xs font-semibold text-[#3A0F34] hover:text-[#EAAA00] transition-colors"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-[#A3A3A3] hover:text-white transition-colors cursor-pointer"
             >
               <span>{showRawText ? "Hide Extracted Text" : "View Extracted Text"}</span>
               {showRawText ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
@@ -218,7 +216,7 @@ export const ResumeView: React.FC<ResumeViewProps> = ({
 
           {/* Raw Extracted Text Drawer */}
           {showRawText && (
-            <div className="rounded-xl border border-[#CBD5DD] bg-[#F4F7F9] p-4 text-xs font-mono text-[#58505C] max-h-60 overflow-y-auto whitespace-pre-wrap">
+            <div className="rounded-xl border border-white/[0.08] bg-black/40 p-4 text-xs font-mono text-[#A3A3A3] max-h-60 overflow-y-auto whitespace-pre-wrap">
               {resume.extractedText}
             </div>
           )}
@@ -229,12 +227,12 @@ export const ResumeView: React.FC<ResumeViewProps> = ({
             <div className="lg:col-span-2 space-y-6">
               {/* Profile Summary */}
               {resume.parsedSummary && (
-                <div className="rounded-xl border border-[#CBD5DD] bg-white p-5 shadow-xs space-y-2">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#3A0F34] flex items-center gap-1.5">
-                    <Sparkles className="h-3.5 w-3.5 text-[#EAAA00]" />
+                <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 shadow-xs space-y-2">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5 text-white" />
                     AI Candidate Summary
                   </h3>
-                  <p className="text-sm text-[#1F1722] leading-relaxed">
+                  <p className="text-sm text-white/90 leading-relaxed">
                     {resume.parsedSummary}
                   </p>
                 </div>
@@ -242,14 +240,14 @@ export const ResumeView: React.FC<ResumeViewProps> = ({
 
               {/* Tailored Interview Questions */}
               {resume.interviewQuestions && resume.interviewQuestions.length > 0 && (
-                <div className="rounded-xl border border-[#CBD5DD] bg-white p-5 shadow-xs space-y-4">
+                <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 shadow-xs space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-sm font-bold text-[#3A0F34] flex items-center gap-1.5">
-                        <HelpCircle className="h-4 w-4 text-[#EAAA00]" />
+                      <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
+                        <HelpCircle className="h-4 w-4 text-white" />
                         Targeted Interview Questions
                       </h3>
-                      <p className="text-xs text-[#58505C]">
+                      <p className="text-xs text-[#737373]">
                         Generated based on projects and technologies on your resume
                       </p>
                     </div>
@@ -259,13 +257,13 @@ export const ResumeView: React.FC<ResumeViewProps> = ({
                     {resume.interviewQuestions.map((q, idx) => (
                       <div
                         key={idx}
-                        className="group flex items-start justify-between gap-3 rounded-lg border border-[#CBD5DD] bg-[#F4F7F9] p-3.5 hover:border-[#3A0F34] hover:bg-white transition-all"
+                        className="group flex items-start justify-between gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-3.5 hover:border-white/30 hover:bg-white/[0.04] transition-all"
                       >
                         <div className="flex items-start gap-2.5">
-                          <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#3A0F34] text-[11px] font-bold text-[#EAAA00] mt-0.5">
+                          <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-white/10 text-[11px] font-bold text-white mt-0.5">
                             {idx + 1}
                           </span>
-                          <p className="text-xs sm:text-sm font-medium text-[#1F1722] leading-snug">
+                          <p className="text-xs sm:text-sm font-medium text-white/90 leading-snug">
                             {q}
                           </p>
                         </div>
@@ -273,7 +271,7 @@ export const ResumeView: React.FC<ResumeViewProps> = ({
                         {onPracticeQuestion && (
                           <button
                             onClick={() => onPracticeQuestion(q)}
-                            className="flex-shrink-0 inline-flex items-center gap-1 rounded-md bg-[#EAAA00] px-2.5 py-1 text-[11px] font-bold text-[#270A23] hover:bg-[#CF9400] transition-colors"
+                            className="flex-shrink-0 inline-flex items-center gap-1 rounded-lg bg-white px-2.5 py-1 text-[11px] font-bold text-black hover:bg-[#E5E5E5] transition-colors cursor-pointer"
                             title="Practice this question"
                           >
                             <PlayCircle className="h-3 w-3" />
@@ -289,8 +287,8 @@ export const ResumeView: React.FC<ResumeViewProps> = ({
 
             {/* Right Col: Extracted Skills & Competencies */}
             <div className="space-y-6">
-              <div className="rounded-xl border border-[#CBD5DD] bg-white p-5 shadow-xs space-y-3">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-[#3A0F34]">
+              <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 shadow-xs space-y-3">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-white">
                   Extracted Skills & Tech
                 </h3>
 
@@ -299,14 +297,14 @@ export const ResumeView: React.FC<ResumeViewProps> = ({
                     {resume.parsedSkills.map((skill, idx) => (
                       <span
                         key={idx}
-                        className="rounded-lg bg-[#DDE3E8] px-2.5 py-1 text-xs font-semibold text-[#3A0F34]"
+                        className="rounded-lg bg-white/10 px-2.5 py-1 text-xs font-semibold text-[#A3A3A3]"
                       >
                         {skill}
                       </span>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs text-[#58505C]">No skills explicitly tagged.</p>
+                  <p className="text-xs text-[#737373]">No skills explicitly tagged.</p>
                 )}
               </div>
             </div>

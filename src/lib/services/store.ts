@@ -103,19 +103,30 @@ export async function getSettingsForUser(userId: string): Promise<UserSettingsDa
         });
       }
 
+      const userProviderConfigs = await prisma.aIProviderConfig.findMany({
+        where: { userId, isEnabled: true },
+      });
+
+      const activeCustom = userProviderConfigs.find((c) => c.isActive) || null;
+      const hasGemini = !!process.env.GEMINI_API_KEY || userProviderConfigs.some((c) => c.providerType === "gemini");
+      const hasOpenAI = !!process.env.OPENAI_API_KEY || userProviderConfigs.some((c) => c.providerType === "openai");
+
       return {
         id: settings.id,
         userId: settings.userId,
-        activeProvider: settings.activeProvider as AIProvider,
-        preferredModel: settings.preferredModel,
+        activeProvider: (activeCustom?.providerType || settings.activeProvider) as AIProvider,
+        preferredModel: activeCustom?.model || settings.preferredModel,
+        activeProviderConfigId: activeCustom?.id || null,
+        activeProviderName: activeCustom?.name || (settings.activeProvider === "gemini" ? "Google Gemini" : "OpenAI"),
         audioAutoTranscribe: settings.audioAutoTranscribe,
         dataRetentionDays: settings.dataRetentionDays,
         defaultJobRole: settings.defaultJobRole,
         interviewDifficulty: settings.interviewDifficulty,
-        geminiConfigured: !!process.env.GEMINI_API_KEY,
-        openaiConfigured: !!process.env.OPENAI_API_KEY,
-        transcriptionConfigured: !!(process.env.TRANSCRIPTION_API_KEY || process.env.OPENAI_API_KEY),
+        geminiConfigured: hasGemini,
+        openaiConfigured: hasOpenAI,
+        transcriptionConfigured: !!(process.env.TRANSCRIPTION_API_KEY || process.env.OPENAI_API_KEY || hasOpenAI),
         transcriptionProvider: process.env.TRANSCRIPTION_PROVIDER || "openai",
+        configuredProvidersCount: userProviderConfigs.length,
       };
     } catch {
       // Fall through to local store
@@ -138,6 +149,7 @@ export async function getSettingsForUser(userId: string): Promise<UserSettingsDa
       openaiConfigured: !!process.env.OPENAI_API_KEY,
       transcriptionConfigured: !!(process.env.TRANSCRIPTION_API_KEY || process.env.OPENAI_API_KEY),
       transcriptionProvider: process.env.TRANSCRIPTION_PROVIDER || "openai",
+      configuredProvidersCount: 0,
     };
     writeLocalJson("settings.json", store);
   }

@@ -14,9 +14,12 @@ export function getProvider(name?: AIProvider) {
   return geminiProvider;
 }
 
-export async function executeAIRequest(payload: AIRequestPayload): Promise<AIResponsePayload> {
+export async function executeAIRequest(
+  payload: AIRequestPayload,
+  options?: { apiKey?: string; model?: string }
+): Promise<AIResponsePayload> {
   const provider = getProvider(payload.provider);
-  return await provider.generateResponse(payload);
+  return await provider.generateResponse(payload, options);
 }
 
 export { geminiProvider, openaiProvider };

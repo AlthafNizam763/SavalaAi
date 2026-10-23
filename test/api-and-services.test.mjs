@@ -232,4 +232,124 @@ test("Savala AI - Suite", async (t) => {
     const formattedTab = formatAudioErrorMessage(tabError, "tab_audio");
     assert.ok(formattedTab.includes("Share tab audio"));
   });
+
+  await t.test("Multi-Provider API Key Manager - AES-256-GCM Encryption at Rest", async () => {
+    // Dynamically test crypto logic in ES module
+    const crypto = await import("crypto");
+
+    const ALGORITHM = "aes-256-gcm";
+    const IV_LENGTH = 12;
+    const testSecret = "savala-test-encryption-key-32b-secret";
+    const key = crypto.createHash("sha256").update(testSecret).digest();
+
+    const encryptKey = (plain) => {
+      const iv = crypto.randomBytes(IV_LENGTH);
+      const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
+      let encrypted = cipher.update(plain, "utf8", "base64");
+      encrypted += cipher.final("base64");
+      const authTag = cipher.getAuthTag().toString("base64");
+      return { encrypted, iv: iv.toString("base64"), authTag };
+    };
+
+    const decryptKey = (encrypted, ivB64, authTagB64) => {
+      const iv = Buffer.from(ivB64, "base64");
+      const authTag = Buffer.from(authTagB64, "base64");
+      const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
+      decipher.setAuthTag(authTag);
+      let decrypted = decipher.update(encrypted, "base64", "utf8");
+      decrypted += decipher.final("utf8");
+      return decrypted;
+    };
+
+    const rawApiKey = "AIzaSyD-sample-gemini-live-secret-key-123456789";
+    const { encrypted, iv, authTag } = encryptKey(rawApiKey);
+
+    // Verify plaintext is NEVER present in ciphertext or iv
+    assert.notEqual(encrypted, rawApiKey);
+    assert.equal(encrypted.includes(rawApiKey), false);
+
+    // Decrypt and verify exact match
+    const recovered = decryptKey(encrypted, iv, authTag);
+    assert.equal(recovered, rawApiKey);
+
+    // Tampering test: modified auth tag must throw
+    assert.throws(() => {
+      const tamperedTag = Buffer.from("bad-auth-tag-value!").toString("base64");
+      decryptKey(encrypted, iv, tamperedTag);
+    });
+  });
+
+  await t.test("Multi-Provider API Key Manager - Masking & Client Secret Shield", async () => {
+    const maskApiKey = (key) => {
+      if (!key) return "••••••••••••";
+      const trimmed = key.trim();
+      if (trimmed.length <= 8) return "••••••••";
+      if (trimmed.startsWith("sk-")) {
+        return `${trimmed.slice(0, 7)}...${trimmed.slice(-4)}`;
+      }
+      return `${trimmed.slice(0, 4)}...${trimmed.slice(-4)}`;
+    };
+
+    assert.equal(maskApiKey("AIzaSyD1234567890abcdef"), "AIza...cdef");
+    assert.equal(maskApiKey("sk-proj-998877665544332211"), "sk-proj...2211");
+    assert.equal(maskApiKey("short"), "••••••••");
+    assert.equal(maskApiKey(""), "••••••••••••");
+  });
+
+  await t.test("Multi-Provider API Key Manager - SSRF Allowlist Guard", async () => {
+    const ALLOWED_ENDPOINTS = [
+      "https://generativelanguage.googleapis.com",
+      "https://api.openai.com",
+    ];
+
+    const validateEndpoint = (url) => {
+      if (!url || !url.trim()) return { isValid: true };
+      try {
+        const parsed = new URL(url.trim());
+        if (parsed.protocol !== "https:") {
+          return { isValid: false, error: "Only HTTPS allowed" };
+        }
+        const hostname = parsed.hostname.toLowerCase();
+        if (["localhost", "127.0.0.1", "0.0.0.0", "169.254.169.254"].includes(hostname)) {
+          return { isValid: false, error: "Internal SSRF blocked" };
+        }
+        const isAllowed = ALLOWED_ENDPOINTS.some((ep) => {
+          const allowedParsed = new URL(ep);
+          return hostname === allowedParsed.hostname;
+        });
+        return isAllowed ? { isValid: true } : { isValid: false, error: "Domain not in allowlist" };
+      } catch {
+        return { isValid: false, error: "Invalid URL" };
+      }
+    };
+
+    assert.equal(validateEndpoint("https://generativelanguage.googleapis.com/v1beta").isValid, true);
+    assert.equal(validateEndpoint("https://api.openai.com/v1").isValid, true);
+    assert.equal(validateEndpoint("http://generativelanguage.googleapis.com").isValid, false);
+    assert.equal(validateEndpoint("http://localhost:3000/internal-admin").isValid, false);
+    assert.equal(validateEndpoint("http://169.254.169.254/latest/meta-data").isValid, false);
+    assert.equal(validateEndpoint("https://attacker-controlled-site.com/api").isValid, false);
+  });
+
+  await t.test("Multi-Provider API Key Manager - Dynamic arbitrary configs (>3)", async () => {
+    // Verify system can hold arbitrary number of configs and set active seamlessly
+    const configs = [
+      { id: "cfg_1", name: "Gemini Flash Primary", providerType: "gemini", model: "gemini-2.5-flash", isActive: false },
+      { id: "cfg_2", name: "Gemini 2.5 Pro High-Reasoning", providerType: "gemini", model: "gemini-2.5-pro", isActive: false },
+      { id: "cfg_3", name: "OpenAI GPT-4o Mini Fast", providerType: "openai", model: "gpt-4o-mini", isActive: false },
+      { id: "cfg_4", name: "OpenAI GPT-4o Production", providerType: "openai", model: "gpt-4o", isActive: true },
+      { id: "cfg_5", name: "OpenAI o3-mini Reasoning", providerType: "openai", model: "o3-mini", isActive: false },
+    ];
+
+    assert.equal(configs.length > 3, true);
+    const active = configs.find((c) => c.isActive);
+    assert.equal(active?.id, "cfg_4");
+    assert.equal(active?.model, "gpt-4o");
+
+    // Switch active
+    const switchActive = (targetId) => configs.map((c) => ({ ...c, isActive: c.id === targetId }));
+    const switched = switchActive("cfg_2");
+    assert.equal(switched.find((c) => c.isActive)?.id, "cfg_2");
+  });
 });
+

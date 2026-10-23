@@ -10,35 +10,61 @@ datasource db {
 }
 
 model User {
-  id           String            @id @default(cuid()) @map("_id")
-  email        String            @unique
-  name         String?
-  passwordHash String?
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
+  id              String             @id @default(cuid()) @map("_id")
+  email           String             @unique
+  name            String?
+  passwordHash    String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
   
-  settings     UserSettings?
-  sessions     PracticeSession[]
-  resumes      Resume[]
+  settings        UserSettings?
+  sessions        PracticeSession[]
+  resumes         Resume[]
+  providerConfigs AIProviderConfig[]
 
   @@map("users")
 }
 
 model UserSettings {
-  id                   String   @id @default(cuid()) @map("_id")
-  userId               String   @unique
-  activeProvider       String   @default("gemini") // "gemini" | "openai"
-  preferredModel       String   @default("gemini-2.5-flash")
-  audioAutoTranscribe  Boolean  @default(true)
-  dataRetentionDays    Int      @default(30)
-  defaultJobRole       String   @default("Full-Stack Software Engineer")
-  interviewDifficulty  String   @default("Medium") // "Junior" | "Medium" | "Senior" | "Staff"
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  id                     String   @id @default(cuid()) @map("_id")
+  userId                 String   @unique
+  activeProvider         String   @default("gemini") // "gemini" | "openai"
+  preferredModel         String   @default("gemini-2.5-flash")
+  activeProviderConfigId String?  // Optional reference to a specific AIProviderConfig
+  audioAutoTranscribe    Boolean  @default(true)
+  dataRetentionDays      Int      @default(30)
+  defaultJobRole         String   @default("Full-Stack Software Engineer")
+  interviewDifficulty    String   @default("Medium") // "Junior" | "Medium" | "Senior" | "Staff"
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
 
-  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_settings")
+}
+
+model AIProviderConfig {
+  id              String   @id @default(cuid()) @map("_id")
+  userId          String
+  name            String   // Custom display name, e.g. "Work Gemini 2.5", "Personal OpenAI"
+  providerType    String   // "gemini" | "openai"
+  model           String   // e.g. "gemini-2.5-flash", "gpt-4o-mini", "gpt-4o"
+  encryptedApiKey String   // AES-256-GCM encrypted ciphertext (never plaintext)
+  iv              String   // Initialization vector
+  authTag         String   // GCM authentication tag
+  maskedKey       String   // e.g. "AIza...8XyZ" or "sk-proj-...1234"
+  isActive        Boolean  @default(false)
+  isEnabled       Boolean  @default(true)
+  customEndpoint  String?  // Optional custom endpoint (strictly allowlisted)
+  lastTestedAt    DateTime?
+  testStatus      String?  // "verified" | "failed" | null
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("ai_provider_configs")
 }
 
 model Resume {

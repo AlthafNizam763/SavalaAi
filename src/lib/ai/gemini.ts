@@ -7,27 +7,33 @@ import { buildSystemPrompt, buildUserPrompt } from "./prompts";
 export class GeminiProvider implements IAIProvider {
   public readonly name = "gemini" as const;
 
-  public isConfigured(): boolean {
+  public isConfigured(customKey?: string): boolean {
+    if (customKey && customKey.trim().length > 0) return true;
     return isGeminiConfigured();
   }
 
-  public async generateResponse(payload: AIRequestPayload): Promise<AIResponsePayload> {
-    if (!this.isConfigured()) {
+  public async generateResponse(
+    payload: AIRequestPayload,
+    options?: { apiKey?: string; model?: string }
+  ): Promise<AIResponsePayload> {
+    const effectiveKey = options?.apiKey?.trim() || serverConfig.geminiApiKey?.trim() || "";
+
+    if (!effectiveKey) {
       return {
         success: false,
         content: "",
         provider: "gemini",
-        model: payload.model || serverConfig.geminiModel,
-        error: "Google Gemini is not configured. Please set GEMINI_API_KEY in your environment (.env.local).",
+        model: options?.model || payload.model || serverConfig.geminiModel,
+        error: "Google Gemini is not configured. Please add your Gemini API Key in Settings > AI Providers, or set GEMINI_API_KEY in .env.local.",
       };
     }
 
-    const modelName = payload.model || serverConfig.geminiModel || "gemini-2.5-flash";
+    const modelName = options?.model || payload.model || serverConfig.geminiModel || "gemini-2.5-flash";
     const systemPrompt = buildSystemPrompt(payload.action, payload);
     const userPrompt = buildUserPrompt(payload);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: serverConfig.geminiApiKey });
+      const ai = new GoogleGenAI({ apiKey: effectiveKey });
       const response = await ai.models.generateContent({
         model: modelName,
         contents: [

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { executeAIRequest } from "@/lib/ai";
-import { getSettingsForUser } from "@/lib/services/store";
+import { resolveActiveProviderCredentials } from "@/lib/services/providerStore";
 import { AIRequestPayload } from "@/types";
 
 const aiRequestSchema = z.object({
@@ -51,19 +51,24 @@ export async function POST(req: NextRequest) {
 
     const data = parseResult.data;
 
-    // If provider is not specified in the payload, use user's saved preference
-    let activeProvider = data.provider;
-    if (!activeProvider) {
-      const settings = await getSettingsForUser(user.id);
-      activeProvider = settings.activeProvider;
-    }
+    // Resolve user's active in-app provider configuration (or env fallback)
+    const activeCreds = await resolveActiveProviderCredentials(user.id);
+
+    const activeProvider = data.provider || activeCreds.provider;
+    const activeModel = data.model || activeCreds.model;
+    // Only pass custom decrypted key if using the matching provider
+    const dynamicKey = (!data.provider || data.provider === activeCreds.provider) ? activeCreds.apiKey : undefined;
 
     const payload: AIRequestPayload = {
       ...data,
       provider: activeProvider,
+      model: activeModel,
     };
 
-    const response = await executeAIRequest(payload);
+    const response = await executeAIRequest(payload, {
+      apiKey: dynamicKey,
+      model: activeModel,
+    });
 
     if (!response.success && response.error) {
       return NextResponse.json(response, { status: 502 });

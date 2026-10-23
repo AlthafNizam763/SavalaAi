@@ -7,27 +7,33 @@ import { buildSystemPrompt, buildUserPrompt } from "./prompts";
 export class OpenAIProvider implements IAIProvider {
   public readonly name = "openai" as const;
 
-  public isConfigured(): boolean {
+  public isConfigured(customKey?: string): boolean {
+    if (customKey && customKey.trim().length > 0) return true;
     return isOpenAIConfigured();
   }
 
-  public async generateResponse(payload: AIRequestPayload): Promise<AIResponsePayload> {
-    if (!this.isConfigured()) {
+  public async generateResponse(
+    payload: AIRequestPayload,
+    options?: { apiKey?: string; model?: string }
+  ): Promise<AIResponsePayload> {
+    const effectiveKey = options?.apiKey?.trim() || serverConfig.openaiApiKey?.trim() || "";
+
+    if (!effectiveKey) {
       return {
         success: false,
         content: "",
         provider: "openai",
-        model: payload.model || serverConfig.openaiModel,
-        error: "OpenAI is not configured. Please set OPENAI_API_KEY in your environment (.env.local).",
+        model: options?.model || payload.model || serverConfig.openaiModel,
+        error: "OpenAI is not configured. Please add your OpenAI API Key in Settings > AI Providers, or set OPENAI_API_KEY in .env.local.",
       };
     }
 
-    const modelName = payload.model || serverConfig.openaiModel || "gpt-4o-mini";
+    const modelName = options?.model || payload.model || serverConfig.openaiModel || "gpt-4o-mini";
     const systemPrompt = buildSystemPrompt(payload.action, payload);
     const userPrompt = buildUserPrompt(payload);
 
     try {
-      const openai = new OpenAI({ apiKey: serverConfig.openaiApiKey });
+      const openai = new OpenAI({ apiKey: effectiveKey });
       const completion = await openai.chat.completions.create({
         model: modelName,
         messages: [

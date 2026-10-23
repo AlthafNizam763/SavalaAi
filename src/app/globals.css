@@ -1,86 +1,116 @@
 @import "tailwindcss";
 
 :root {
-  /* Brand Core Tokens */
-  --ice-silver: #DDE3E8;
-  --ice-silver-light: #F4F7F9;
-  --ice-silver-subtle: #E9EEF2;
-  --ice-silver-border: #C8D3DB;
-  
-  --deep-aubergine: #3A0F34;
-  --deep-aubergine-dark: #270A23;
-  --deep-aubergine-light: #52184B;
-  --deep-aubergine-surface: #42123C;
-  
-  --marigold: #EAAA00;
-  --marigold-hover: #CF9400;
-  --marigold-light: #FFF8E6;
-  --marigold-border: #E5B232;
-  
-  /* Neutral & Utility Tokens */
-  --surface-white: #FFFFFF;
-  --text-primary: #1F1722;
-  --text-secondary: #58505C;
-  --text-muted: #7F7784;
-  --border-subtle: rgba(58, 15, 52, 0.12);
-  
-  --status-success: #15803D;
-  --status-success-bg: #F0FDF4;
-  --status-error: #B91C1C;
-  --status-error-bg: #FEF2F2;
-  --status-warning: #B45309;
-  --status-warning-bg: #FFFBEB;
+  /* Black-and-White Glassmorphism Palette */
+  --bg-primary: #080808;
+  --bg-secondary: #101010;
+  --bg-elevated: #161616;
+  --bg-surface: #121212;
+
+  --glass-surface: rgba(255, 255, 255, 0.055);
+  --glass-surface-hover: rgba(255, 255, 255, 0.08);
+  --glass-elevated: rgba(255, 255, 255, 0.085);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-border-focus: rgba(255, 255, 255, 0.28);
+  --glass-border-strong: rgba(255, 255, 255, 0.18);
+
+  --text-primary: #FFFFFF;
+  --text-secondary: #A3A3A3;
+  --text-muted: #737373;
+
+  --action-primary-bg: #FFFFFF;
+  --action-primary-text: #080808;
+  --action-primary-hover: #E5E5E5;
+
+  --action-secondary-bg: #222222;
+  --action-secondary-text: #FFFFFF;
+  --action-secondary-hover: #2D2D2D;
+
+  --status-error: #EF4444;
+  --status-error-bg: rgba(239, 68, 68, 0.12);
+  --status-error-border: rgba(239, 68, 68, 0.24);
+
+  --status-success: #10B981;
+  --status-success-bg: rgba(16, 185, 129, 0.12);
+  --status-success-border: rgba(16, 185, 129, 0.24);
+
+  --status-warning: #F59E0B;
+  --status-warning-bg: rgba(245, 158, 11, 0.12);
+  --status-warning-border: rgba(245, 158, 11, 0.24);
 }
 
 @theme inline {
-  --color-ice-silver: var(--ice-silver);
-  --color-ice-silver-light: var(--ice-silver-light);
-  --color-ice-silver-subtle: var(--ice-silver-subtle);
-  --color-ice-silver-border: var(--ice-silver-border);
-  
-  --color-deep-aubergine: var(--deep-aubergine);
-  --color-deep-aubergine-dark: var(--deep-aubergine-dark);
-  --color-deep-aubergine-light: var(--deep-aubergine-light);
-  --color-deep-aubergine-surface: var(--deep-aubergine-surface);
-  
-  --color-marigold: var(--marigold);
-  --color-marigold-hover: var(--marigold-hover);
-  --color-marigold-light: var(--marigold-light);
-  --color-marigold-border: var(--marigold-border);
-  
-  --color-surface-white: var(--surface-white);
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-glass-surface: var(--glass-surface);
+  --color-glass-elevated: var(--glass-elevated);
+  --color-glass-border: var(--glass-border);
+
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
   --color-text-muted: var(--text-muted);
+
+  --color-action-primary: var(--action-primary-bg);
+  --color-action-primary-text: var(--action-primary-text);
+  --color-action-secondary: var(--action-secondary-bg);
 }
 
 body {
-  background-color: var(--ice-silver-light);
+  background-color: var(--bg-primary);
   color: var(--text-primary);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   margin: 0;
   padding: 0;
   min-height: 100vh;
+  letter-spacing: -0.01em;
 }
 
-/* Custom scrollbars */
+/* Glassmorphism Surface Utilities */
+.glass-panel {
+  background: var(--glass-surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+}
+
+.glass-panel-elevated {
+  background: var(--glass-elevated);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border-strong);
+}
+
+/* Fallback for browsers without backdrop-filter support */
+@supports not (backdrop-filter: blur(1px)) {
+  .glass-panel {
+    background: #101010;
+    border: 1px solid #262626;
+  }
+  .glass-panel-elevated {
+    background: #171717;
+    border: 1px solid #333333;
+  }
+}
+
+/* Custom dark monochrome scrollbar */
 ::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--ice-silver-light);
+  background: #080808;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--ice-silver-border);
-  border-radius: 4px;
+  background: #262626;
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--deep-aubergine-light);
+  background: #404040;
 }
 
-/* Accessible focus outlines */
+/* Accessible monochrome focus outline */
 :focus-visible {
-  outline: 2px solid var(--marigold);
+  outline: 2px solid #FFFFFF;
   outline-offset: 2px;
 }

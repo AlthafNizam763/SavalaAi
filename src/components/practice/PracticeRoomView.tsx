@@ -75,7 +75,6 @@ export const PracticeRoomView: React.FC<PracticeRoomViewProps> = ({
     audioChunksRef.current = [];
     setRecordingSeconds(0);
 
-    // Check browser support
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       setMicPermissionError("Your browser does not support audio recording via getUserMedia. Please use Chrome, Firefox, or Edge.");
       return;
@@ -92,7 +91,6 @@ export const PracticeRoomView: React.FC<PracticeRoomViewProps> = ({
 
       mediaStreamRef.current = stream;
 
-      // Determine supported mime type
       const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
         ? "audio/webm;codecs=opus"
         : MediaRecorder.isTypeSupported("audio/webm")
@@ -116,20 +114,17 @@ export const PracticeRoomView: React.FC<PracticeRoomViewProps> = ({
         const recordedBlob = new Blob(audioChunksRef.current, { type });
         stopMediaTracks();
 
-        // If auto-transcribe is enabled, automatically send to transcription route
         if (settings?.audioAutoTranscribe !== false) {
           await sendAudioForTranscription(recordedBlob, type);
         }
       };
 
-      recorder.start(1000); // 1-second chunks
+      recorder.start(1000);
       setIsRecording(true);
 
-      // Start elapsed timer
       timerIntervalRef.current = setInterval(() => {
         setRecordingSeconds((prev) => {
           if (prev >= 300) {
-            // Enforce maximum 5 minutes recording limit
             stopRecording();
             return 300;
           }
@@ -178,7 +173,6 @@ export const PracticeRoomView: React.FC<PracticeRoomViewProps> = ({
       if (response.ok && data.success) {
         setTranscript((prev) => (prev ? `${prev}\n\n${data.transcript}` : data.transcript));
       } else {
-        // If STT provider has no API key configured, provide a helpful actionable banner
         const errMsg = data.error || "Transcription failed.";
         setMicPermissionError(`${errMsg} You can also type or paste your spoken answer directly into the transcript box below.`);
       }
@@ -204,7 +198,6 @@ export const PracticeRoomView: React.FC<PracticeRoomViewProps> = ({
     }
   };
 
-  // Ask AI about the spoken transcript
   const requestAiAnalysis = async (mode: "feedback" | "model_answer" | "concept") => {
     if (!transcript && mode !== "model_answer") {
       alert("Please record or enter a transcript first so AI can review your response.");
@@ -251,38 +244,26 @@ export const PracticeRoomView: React.FC<PracticeRoomViewProps> = ({
     }
   };
 
-  // Save session to database
   const saveSession = async () => {
     if (!transcript && !aiAnalysis) {
-      alert("No transcript or AI analysis to save.");
+      alert("Please record an answer or generate an evaluation before saving the session.");
       return;
     }
 
     setSaveStatus("saving");
+
     try {
       const response = await fetch("/api/sessions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: `Mock Interview: ${question.substring(0, 50)}...`,
+          title: question.substring(0, 70) + (question.length > 70 ? "..." : ""),
           sessionType: "interview",
-          transcriptText: transcript,
-          durationSeconds: recordingSeconds,
           targetRole,
-          notes: question,
-          messages: aiAnalysis
-            ? [
-                {
-                  role: "user",
-                  content: transcript || `Question: ${question}`,
-                },
-                {
-                  role: "assistant",
-                  content: aiAnalysis,
-                  provider: settings?.activeProvider || "gemini",
-                },
-              ]
-            : [],
+          difficulty,
+          transcriptText: transcript,
+          aiFeedback: aiAnalysis || "Session saved without evaluation.",
+          durationSeconds: recordingSeconds,
         }),
       });
 
@@ -292,11 +273,13 @@ export const PracticeRoomView: React.FC<PracticeRoomViewProps> = ({
         if (onSessionSaved && data.session) {
           onSessionSaved(data.session);
         }
-        setTimeout(() => setSaveStatus(null), 3000);
+        setTimeout(() => setSaveStatus(null), 3500);
       } else {
-        setSaveStatus("error");
+        alert(data.error || "Failed to persist session.");
+        setSaveStatus(null);
       }
     } catch {
+      alert("Network error saving practice session.");
       setSaveStatus("error");
     }
   };
@@ -310,24 +293,24 @@ export const PracticeRoomView: React.FC<PracticeRoomViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Header and Context Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#CBD5DD] pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-[#3A0F34]">Practice Room</h1>
-          <p className="text-xs sm:text-sm text-[#58505C]">
+          <h1 className="text-xl sm:text-2xl font-extrabold text-white">Practice Room</h1>
+          <p className="text-xs text-[#737373] mt-1">
             Speak naturally. Record your answers, review automated transcripts, and receive expert AI coaching.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           {saveStatus === "saved" ? (
-            <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
+            <span className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-400 border border-emerald-500/20">
               <Check className="h-3.5 w-3.5" /> Session Saved
             </span>
           ) : (
             <button
               onClick={saveSession}
               disabled={(!transcript && !aiAnalysis) || saveStatus === "saving"}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[#CBD5DD] bg-white px-3.5 py-1.5 text-xs font-semibold text-[#3A0F34] shadow-xs hover:bg-[#F4F7F9] disabled:opacity-50 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-white px-4 py-2 text-xs font-bold text-black shadow-xs hover:bg-[#E5E5E5] disabled:opacity-40 transition-colors cursor-pointer"
             >
               <Save className="h-3.5 w-3.5" />
               <span>{saveStatus === "saving" ? "Saving..." : "Save Session"}</span>
@@ -337,16 +320,16 @@ export const PracticeRoomView: React.FC<PracticeRoomViewProps> = ({
       </div>
 
       {/* Target Question Box */}
-      <div className="rounded-xl border border-[#CBD5DD] bg-white p-5 shadow-xs space-y-3">
-        <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-[#3A0F34]">
+      <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 shadow-xs space-y-3">
+        <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-white">
           <span className="flex items-center gap-1.5">
-            <MessageSquare className="h-3.5 w-3.5 text-[#EAAA00]" />
+            <MessageSquare className="h-3.5 w-3.5 text-white" />
             Interview Question
           </span>
-          <div className="flex items-center gap-3 lowercase text-[#58505C]">
-            <span>Role: <strong className="text-[#3A0F34] capitalize">{targetRole}</strong></span>
+          <div className="flex items-center gap-3 lowercase text-[#737373]">
+            <span>Role: <strong className="text-white capitalize">{targetRole}</strong></span>
             <span>•</span>
-            <span>Level: <strong className="text-[#3A0F34] capitalize">{difficulty}</strong></span>
+            <span>Level: <strong className="text-white capitalize">{difficulty}</strong></span>
           </div>
         </div>
 
@@ -354,17 +337,17 @@ export const PracticeRoomView: React.FC<PracticeRoomViewProps> = ({
           rows={2}
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          className="w-full resize-none rounded-lg border border-[#CBD5DD] bg-[#F4F7F9] p-3 text-sm font-medium text-[#1F1722] focus:border-[#3A0F34] focus:bg-white focus:outline-hidden"
+          className="w-full resize-none rounded-xl border border-white/[0.12] bg-white/[0.03] p-3 text-sm font-medium text-white placeholder-[#555] focus:border-white focus:outline-hidden"
           placeholder="Enter the mock interview question..."
         />
 
         <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
-          <span className="text-[#58505C]">Quick presets:</span>
+          <span className="text-[#737373]">Quick presets:</span>
           <button
             onClick={() =>
               setQuestion("Describe how you debugged a high-latency regression in a production service under load.")
             }
-            className="rounded-md bg-[#DDE3E8]/60 px-2 py-1 text-[11px] font-medium text-[#3A0F34] hover:bg-[#DDE3E8]"
+            className="rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] font-medium text-[#A3A3A3] hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
           >
             Production Latency Bug
           </button>
@@ -372,7 +355,7 @@ export const PracticeRoomView: React.FC<PracticeRoomViewProps> = ({
             onClick={() =>
               setQuestion("How do you design an idempotent payment processing API to handle network retries?")
             }
-            className="rounded-md bg-[#DDE3E8]/60 px-2 py-1 text-[11px] font-medium text-[#3A0F34] hover:bg-[#DDE3E8]"
+            className="rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] font-medium text-[#A3A3A3] hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
           >
             Idempotent Payment API
           </button>
@@ -380,7 +363,7 @@ export const PracticeRoomView: React.FC<PracticeRoomViewProps> = ({
             onClick={() =>
               setQuestion("Tell me about a time you strongly disagreed with a product specification or engineering decision.")
             }
-            className="rounded-md bg-[#DDE3E8]/60 px-2 py-1 text-[11px] font-medium text-[#3A0F34] hover:bg-[#DDE3E8]"
+            className="rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] font-medium text-[#A3A3A3] hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
           >
             Conflict / Disagreement
           </button>
@@ -388,13 +371,12 @@ export const PracticeRoomView: React.FC<PracticeRoomViewProps> = ({
       </div>
 
       {/* Recording Console */}
-      <div className="rounded-xl border border-[#CBD5DD] bg-white p-6 shadow-xs text-center space-y-4">
-        {/* Permission / Status Alert */}
+      <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-6 shadow-xs text-center space-y-4">
         {micPermissionError && (
-          <div className="rounded-lg bg-amber-50 p-3 text-left text-xs text-amber-900 border border-amber-200 flex items-start gap-2.5">
-            <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div className="rounded-xl bg-amber-500/10 p-3 text-left text-xs text-amber-200 border border-amber-500/20 flex items-start gap-2.5">
+            <AlertCircle className="h-4 w-4 text-amber-400 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
-              <span className="font-semibold">Notice:</span> {micPermissionError}
+              <span className="font-semibold text-white">Notice:</span> {micPermissionError}
             </div>
           </div>
         )}
@@ -403,13 +385,13 @@ export const PracticeRoomView: React.FC<PracticeRoomViewProps> = ({
         <div className="flex flex-col items-center justify-center space-y-3 py-2">
           <div className="relative flex items-center justify-center">
             {isRecording && (
-              <span className="absolute h-24 w-24 rounded-full bg-[#EAAA00]/25 animate-ping" />
+              <span className="absolute h-24 w-24 rounded-full bg-white/20 animate-ping" />
             )}
             <div
               className={`flex h-20 w-20 items-center justify-center rounded-full transition-all ${
                 isRecording
-                  ? "bg-[#EAAA00] text-[#270A23] shadow-md ring-8 ring-[#EAAA00]/20"
-                  : "bg-[#3A0F34] text-[#DDE3E8]"
+                  ? "bg-white text-black shadow-lg ring-8 ring-white/20"
+                  : "bg-white/10 text-white border border-white/10"
               }`}
             >
               <Mic className={`h-8 w-8 ${isRecording ? "animate-pulse" : ""}`} />
@@ -417,10 +399,10 @@ export const PracticeRoomView: React.FC<PracticeRoomViewProps> = ({
           </div>
 
           <div className="space-y-1">
-            <div className="text-2xl font-extrabold tracking-tight font-mono text-[#3A0F34]">
+            <div className="text-2xl font-extrabold tracking-tight font-mono text-white">
               {formatTimer(recordingSeconds)}
             </div>
-            <p className="text-xs text-[#58505C]">
+            <p className="text-xs text-[#737373]">
               {isRecording
                 ? "Recording microphone audio... Speak clearly. Click Stop when finished."
                 : isTranscribing
@@ -436,7 +418,7 @@ export const PracticeRoomView: React.FC<PracticeRoomViewProps> = ({
             <button
               onClick={startRecording}
               disabled={isTranscribing}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#EAAA00] px-6 py-3 text-sm font-bold text-[#270A23] shadow-sm hover:bg-[#CF9400] disabled:opacity-50 transition-colors"
+              className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-bold text-black shadow-xs hover:bg-[#E5E5E5] disabled:opacity-50 transition-colors cursor-pointer"
             >
               <Mic className="h-4 w-4" />
               <span>Start Recording</span>
@@ -444,16 +426,16 @@ export const PracticeRoomView: React.FC<PracticeRoomViewProps> = ({
           ) : (
             <button
               onClick={stopRecording}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#DC2626] px-6 py-3 text-sm font-bold text-white shadow-sm hover:bg-[#B91C1C] transition-colors"
+              className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-6 py-3 text-sm font-bold text-white shadow-xs hover:bg-rose-700 transition-colors cursor-pointer"
             >
-              <Square className="h-4 w-4" />
+              <Square className="h-4 w-4 fill-white" />
               <span>Stop & Transcribe</span>
             </button>
           )}
 
           {isTranscribing && (
-            <div className="inline-flex items-center gap-2 text-xs font-semibold text-[#3A0F34]">
-              <Loader2 className="h-4 w-4 animate-spin text-[#EAAA00]" />
+            <div className="inline-flex items-center gap-2 text-xs font-semibold text-white">
+              <Loader2 className="h-4 w-4 animate-spin text-white" />
               <span>Transcribing audio...</span>
             </div>
           )}
@@ -463,11 +445,11 @@ export const PracticeRoomView: React.FC<PracticeRoomViewProps> = ({
       {/* Two-Column Workspace: Transcript Editor & AI Coaching Panel */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left: Transcript Display & Editor */}
-        <div className="rounded-xl border border-[#CBD5DD] bg-white p-5 shadow-xs space-y-3 flex flex-col">
+        <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 shadow-xs space-y-3 flex flex-col">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-bold text-[#3A0F34]">Your Spoken Transcript</span>
-              <span className="rounded-md bg-[#DDE3E8] px-2 py-0.5 text-[10px] font-semibold text-[#3A0F34]">
+              <span className="text-sm font-bold text-white">Your Spoken Transcript</span>
+              <span className="rounded-md bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-[#A3A3A3]">
                 {transcript.trim() ? `${transcript.trim().split(/\s+/).length} words` : "0 words"}
               </span>
             </div>
@@ -476,15 +458,15 @@ export const PracticeRoomView: React.FC<PracticeRoomViewProps> = ({
               <button
                 onClick={handleCopyTranscript}
                 disabled={!transcript}
-                className="rounded-lg p-1.5 text-[#58505C] hover:bg-[#F4F7F9] hover:text-[#3A0F34] disabled:opacity-30"
+                className="rounded-lg p-1.5 text-[#737373] hover:text-white hover:bg-white/10 disabled:opacity-30 cursor-pointer"
                 title="Copy Transcript"
               >
-                {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+                {copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
               </button>
               <button
                 onClick={handleClearTranscript}
                 disabled={!transcript}
-                className="rounded-lg p-1.5 text-[#58505C] hover:bg-red-50 hover:text-red-600 disabled:opacity-30"
+                className="rounded-lg p-1.5 text-[#737373] hover:text-rose-400 hover:bg-rose-500/10 disabled:opacity-30 cursor-pointer"
                 title="Clear Transcript"
               >
                 <Trash2 className="h-4 w-4" />
@@ -497,68 +479,68 @@ export const PracticeRoomView: React.FC<PracticeRoomViewProps> = ({
             value={transcript}
             onChange={(e) => setTranscript(e.target.value)}
             placeholder="Your spoken transcription will appear here after recording stops. You can also type or edit your answer directly here..."
-            className="flex-1 w-full rounded-lg border border-[#CBD5DD] p-3 text-sm font-normal text-[#1F1722] leading-relaxed focus:border-[#3A0F34] focus:outline-hidden"
+            className="flex-1 w-full rounded-xl border border-white/[0.10] bg-white/[0.03] p-3 text-sm font-normal text-white leading-relaxed placeholder-[#555] focus:border-white focus:outline-hidden"
           />
 
           {/* Quick AI Coaching Actions */}
-          <div className="pt-2 border-t border-[#CBD5DD] flex flex-wrap gap-2">
+          <div className="pt-2 border-t border-white/[0.08] flex flex-wrap gap-2">
             <button
               onClick={() => requestAiAnalysis("feedback")}
               disabled={aiLoading || !transcript}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-[#3A0F34] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#270A23] disabled:opacity-40 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-black hover:bg-[#E5E5E5] disabled:opacity-40 transition-colors cursor-pointer"
             >
-              <Brain className="h-3.5 w-3.5 text-[#EAAA00]" />
+              <Brain className="h-3.5 w-3.5" />
               <span>Evaluate My Answer</span>
             </button>
 
             <button
               onClick={() => requestAiAnalysis("model_answer")}
               disabled={aiLoading}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[#CBD5DD] bg-white px-3 py-1.5 text-xs font-semibold text-[#3A0F34] hover:bg-[#F4F7F9] disabled:opacity-40 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/10 disabled:opacity-40 transition-colors cursor-pointer"
             >
-              <Sparkles className="h-3.5 w-3.5 text-[#EAAA00]" />
+              <Sparkles className="h-3.5 w-3.5 text-white" />
               <span>Generate Model STAR Answer</span>
             </button>
 
             <button
               onClick={() => requestAiAnalysis("concept")}
               disabled={aiLoading}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[#CBD5DD] bg-white px-3 py-1.5 text-xs font-semibold text-[#3A0F34] hover:bg-[#F4F7F9] disabled:opacity-40 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/10 disabled:opacity-40 transition-colors cursor-pointer"
             >
-              <HelpCircle className="h-3.5 w-3.5 text-[#EAAA00]" />
+              <HelpCircle className="h-3.5 w-3.5 text-white" />
               <span>Deep-Dive Concept</span>
             </button>
           </div>
         </div>
 
         {/* Right: AI Coaching & Feedback Panel */}
-        <div className="rounded-xl border border-[#CBD5DD] bg-white p-5 shadow-xs space-y-3 flex flex-col">
-          <div className="flex items-center justify-between border-b border-[#CBD5DD] pb-2">
+        <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 shadow-xs space-y-3 flex flex-col">
+          <div className="flex items-center justify-between border-b border-white/[0.08] pb-2">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-[#EAAA00]" />
-              <span className="text-sm font-bold text-[#3A0F34]">
+              <Sparkles className="h-4 w-4 text-white" />
+              <span className="text-sm font-bold text-white">
                 AI Assessment & Feedback
               </span>
             </div>
-            <span className="text-[11px] font-semibold capitalize text-[#58505C]">
-              Provider: {settings?.activeProvider || "Gemini"}
+            <span className="text-[11px] font-semibold capitalize text-[#737373]">
+              Provider: {settings?.activeProviderName || settings?.activeProvider || "Gemini"}
             </span>
           </div>
 
           <div className="flex-1 overflow-y-auto min-h-[240px]">
             {aiLoading ? (
-              <div className="flex flex-col items-center justify-center h-full py-12 text-[#58505C] space-y-3">
-                <Loader2 className="h-8 w-8 animate-spin text-[#EAAA00]" />
+              <div className="flex flex-col items-center justify-center h-full py-12 text-[#737373] space-y-3">
+                <Loader2 className="h-8 w-8 animate-spin text-white" />
                 <p className="text-xs font-medium">Savala AI is evaluating your response...</p>
               </div>
             ) : aiAnalysis ? (
-              <div className="prose prose-sm max-w-none text-[#1F1722] text-xs leading-relaxed whitespace-pre-wrap">
+              <div className="text-white text-xs leading-relaxed whitespace-pre-wrap">
                 {aiAnalysis}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center h-full py-12 text-center text-[#58505C] space-y-2">
-                <ThumbsUp className="h-8 w-8 text-[#CBD5DD]" />
-                <h4 className="text-sm font-semibold text-[#1F1722]">Ready for evaluation</h4>
+              <div className="flex flex-col items-center justify-center h-full py-12 text-center text-[#737373] space-y-2">
+                <ThumbsUp className="h-8 w-8 text-[#555]" />
+                <h4 className="text-sm font-semibold text-white">Ready for evaluation</h4>
                 <p className="text-xs max-w-xs">
                   Record your answer or click &quot;Evaluate My Answer&quot; to receive structured feedback on communication, technical accuracy, and delivery.
                 </p>

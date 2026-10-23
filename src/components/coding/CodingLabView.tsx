@@ -70,7 +70,6 @@ const SAMPLE_CODE_SNIPPETS: Record<string, { problem: string; code: string }> = 
   python: {
     problem: "Find the median of two sorted arrays of different sizes in O(log(min(m, n))) time.",
     code: `def findMedianSortedArrays(nums1: list[int], nums2: list[int]) -> float:
-    # Ensure nums1 is smaller or equal in length
     if len(nums1) > len(nums2):
         nums1, nums2 = nums2, nums1
     
@@ -250,7 +249,7 @@ export const CodingLabView: React.FC<CodingLabViewProps> = ({
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Request failed";
-      setAiOutput(`Request Error: ${message}`);
+      setAiOutput(`Request failed: ${message}`);
     } finally {
       setIsLoading(false);
     }
@@ -263,34 +262,29 @@ export const CodingLabView: React.FC<CodingLabViewProps> = ({
   };
 
   const saveCodingSession = async () => {
-    if (!aiOutput && !userCode) return;
+    if (!aiOutput) {
+      alert("Please execute an action first before saving this coding session.");
+      return;
+    }
 
     setSaveStatus("saving");
+
     try {
+      const title = problemPrompt.trim()
+        ? `[${language.toUpperCase()}] ${problemPrompt.substring(0, 50)}...`
+        : `[${language.toUpperCase()}] Coding Exercise`;
+
       const response = await fetch("/api/sessions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: `Coding: ${problemPrompt.substring(0, 50) || "Code Solution"}`,
+          title,
           sessionType: "coding",
+          targetRole: settings?.defaultJobRole || "Full-Stack Software Engineer",
+          difficulty: settings?.interviewDifficulty || "Medium",
+          transcriptText: `Problem:\n${problemPrompt}\n\nSubmitted Code:\n${userCode}`,
+          aiFeedback: aiOutput,
           durationSeconds: 0,
-          targetRole: `${language.toUpperCase()} Algorithmic Challenge`,
-          notes: problemPrompt,
-          messages: [
-            {
-              role: "user",
-              content: `Problem:\n${problemPrompt}\n\nCode:\n\`\`\`${language}\n${userCode}\n\`\`\``,
-            },
-            ...(aiOutput
-              ? [
-                  {
-                    role: "assistant" as const,
-                    content: aiOutput,
-                    provider: settings?.activeProvider || "gemini",
-                  },
-                ]
-              : []),
-          ],
         }),
       });
 
@@ -312,24 +306,24 @@ export const CodingLabView: React.FC<CodingLabViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Header and Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#CBD5DD] pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-[#3A0F34]">Coding Lab</h1>
-          <p className="text-xs sm:text-sm text-[#58505C]">
+          <h1 className="text-xl sm:text-2xl font-extrabold text-white">Coding Lab</h1>
+          <p className="text-xs text-[#737373] mt-1">
             Interactive algorithmic assistant: solve coding challenges, debug defects, inspect complexities, and review design patterns.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           {saveStatus === "saved" ? (
-            <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
+            <span className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-400 border border-emerald-500/20">
               <Check className="h-3.5 w-3.5" /> Saved to History
             </span>
           ) : (
             <button
               onClick={saveCodingSession}
               disabled={!aiOutput || saveStatus === "saving"}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[#CBD5DD] bg-white px-3.5 py-1.5 text-xs font-semibold text-[#3A0F34] shadow-xs hover:bg-[#F4F7F9] disabled:opacity-40 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-white px-4 py-2 text-xs font-bold text-black shadow-xs hover:bg-[#E5E5E5] disabled:opacity-40 transition-colors cursor-pointer"
             >
               <Save className="h-3.5 w-3.5" />
               <span>{saveStatus === "saving" ? "Saving..." : "Save Session"}</span>
@@ -338,7 +332,7 @@ export const CodingLabView: React.FC<CodingLabViewProps> = ({
 
           <button
             onClick={handleReset}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[#CBD5DD] bg-white px-3 py-1.5 text-xs font-semibold text-[#58505C] hover:bg-[#F4F7F9] transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-semibold text-[#A3A3A3] hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
             title="Reset code"
           >
             <RotateCcw className="h-3.5 w-3.5" />
@@ -352,20 +346,20 @@ export const CodingLabView: React.FC<CodingLabViewProps> = ({
         {/* Left Column: Problem Input & Code Editor */}
         <div className="space-y-4">
           {/* Problem Statement Box */}
-          <div className="rounded-xl border border-[#CBD5DD] bg-white p-4 shadow-xs space-y-2">
+          <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 shadow-xs space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-bold uppercase tracking-wider text-[#3A0F34] flex items-center gap-1.5">
-                <BookOpen className="h-3.5 w-3.5 text-[#EAAA00]" />
+              <label className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1.5">
+                <BookOpen className="h-3.5 w-3.5 text-white" />
                 Problem Statement / Requirements
               </label>
 
               {/* Language Selector */}
               <div className="flex items-center gap-1.5">
-                <span className="text-[11px] text-[#58505C] font-medium">Language:</span>
+                <span className="text-[11px] text-[#737373] font-medium">Language:</span>
                 <select
                   value={language}
                   onChange={(e) => handleLanguageChange(e.target.value)}
-                  className="rounded-md border border-[#CBD5DD] bg-[#F4F7F9] px-2.5 py-1 text-xs font-semibold text-[#3A0F34] focus:border-[#3A0F34] focus:outline-hidden"
+                  className="rounded-lg border border-white/[0.12] bg-[#141414] px-2.5 py-1 text-xs font-semibold text-white focus:border-white focus:outline-hidden cursor-pointer"
                 >
                   <option value="typescript">TypeScript</option>
                   <option value="javascript">JavaScript</option>
@@ -382,18 +376,18 @@ export const CodingLabView: React.FC<CodingLabViewProps> = ({
               value={problemPrompt}
               onChange={(e) => setProblemPrompt(e.target.value)}
               placeholder="Describe the coding challenge, constraints, input/output formats..."
-              className="w-full resize-none rounded-lg border border-[#CBD5DD] bg-[#F4F7F9] p-3 text-xs font-medium text-[#1F1722] focus:border-[#3A0F34] focus:bg-white focus:outline-hidden"
+              className="w-full resize-none rounded-xl border border-white/[0.10] bg-white/[0.03] p-3 text-xs font-medium text-white placeholder-[#555] focus:border-white focus:outline-hidden"
             />
           </div>
 
           {/* Accessible Code Editor */}
-          <div className="rounded-xl border border-[#3A0F34] bg-[#270A23] text-white shadow-xs overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between border-b border-white/10 px-4 py-2.5 bg-[#3A0F34]">
-              <div className="flex items-center gap-2 text-xs font-mono text-[#DDE3E8]">
-                <Terminal className="h-4 w-4 text-[#EAAA00]" />
-                <span className="font-semibold uppercase">{language} Source Code</span>
+          <div className="rounded-xl border border-white/[0.12] bg-[#0A0A0A] text-white shadow-xs overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between border-b border-white/[0.08] px-4 py-2.5 bg-white/[0.02]">
+              <div className="flex items-center gap-2 text-xs font-mono text-[#A3A3A3]">
+                <Terminal className="h-4 w-4 text-white" />
+                <span className="font-semibold uppercase text-white">{language} Source Code</span>
               </div>
-              <span className="text-[11px] text-[#DDE3E8]/60 font-mono">
+              <span className="text-[11px] text-[#737373] font-mono">
                 {userCode.split("\n").length} lines
               </span>
             </div>
@@ -404,7 +398,7 @@ export const CodingLabView: React.FC<CodingLabViewProps> = ({
               onChange={(e) => setUserCode(e.target.value)}
               placeholder="// Write or paste your solution here..."
               spellCheck={false}
-              className="w-full resize-y bg-[#270A23] p-4 font-mono text-xs text-[#DDE3E8] leading-relaxed focus:outline-hidden selection:bg-[#EAAA00]/30"
+              className="w-full resize-y bg-transparent p-4 font-mono text-xs text-white/90 leading-relaxed focus:outline-hidden selection:bg-white/20"
             />
           </div>
 
@@ -413,7 +407,7 @@ export const CodingLabView: React.FC<CodingLabViewProps> = ({
             <button
               onClick={() => runCodeAction("solve_problem")}
               disabled={isLoading}
-              className="flex items-center justify-center gap-1.5 rounded-xl bg-[#EAAA00] py-2.5 px-3 text-xs font-bold text-[#270A23] shadow-sm hover:bg-[#CF9400] disabled:opacity-50 transition-colors"
+              className="flex items-center justify-center gap-1.5 rounded-xl bg-white py-2.5 px-3 text-xs font-bold text-black shadow-xs hover:bg-[#E5E5E5] disabled:opacity-50 transition-colors cursor-pointer"
             >
               <Sparkles className="h-3.5 w-3.5" />
               <span>Solve Problem</span>
@@ -422,38 +416,38 @@ export const CodingLabView: React.FC<CodingLabViewProps> = ({
             <button
               onClick={() => runCodeAction("debug_code")}
               disabled={isLoading}
-              className="flex items-center justify-center gap-1.5 rounded-xl bg-[#3A0F34] py-2.5 px-3 text-xs font-bold text-white hover:bg-[#270A23] disabled:opacity-50 transition-colors"
+              className="flex items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] py-2.5 px-3 text-xs font-semibold text-white hover:bg-white/10 disabled:opacity-50 transition-colors cursor-pointer"
             >
-              <Bug className="h-3.5 w-3.5 text-[#EAAA00]" />
+              <Bug className="h-3.5 w-3.5 text-white" />
               <span>Debug Code</span>
             </button>
 
             <button
               onClick={() => runCodeAction("explain_code")}
               disabled={isLoading}
-              className="flex items-center justify-center gap-1.5 rounded-xl border border-[#CBD5DD] bg-white py-2.5 px-3 text-xs font-bold text-[#3A0F34] hover:bg-[#F4F7F9] disabled:opacity-50 transition-colors"
+              className="flex items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] py-2.5 px-3 text-xs font-semibold text-white hover:bg-white/10 disabled:opacity-50 transition-colors cursor-pointer"
             >
-              <BookOpen className="h-3.5 w-3.5 text-[#3A0F34]" />
+              <BookOpen className="h-3.5 w-3.5 text-white" />
               <span>Explain</span>
             </button>
 
             <button
               onClick={() => runCodeAction("review_code")}
               disabled={isLoading}
-              className="flex items-center justify-center gap-1.5 rounded-xl border border-[#CBD5DD] bg-white py-2.5 px-3 text-xs font-bold text-[#3A0F34] hover:bg-[#F4F7F9] disabled:opacity-50 transition-colors"
+              className="flex items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] py-2.5 px-3 text-xs font-semibold text-white hover:bg-white/10 disabled:opacity-50 transition-colors cursor-pointer"
             >
-              <CheckCircle className="h-3.5 w-3.5 text-[#3A0F34]" />
+              <CheckCircle className="h-3.5 w-3.5 text-white" />
               <span>Review</span>
             </button>
           </div>
         </div>
 
         {/* Right Column: AI Analysis, Complexity, Edge Cases & Generated Solution */}
-        <div className="rounded-xl border border-[#CBD5DD] bg-white p-5 shadow-xs space-y-4 min-h-[500px]">
-          <div className="flex items-center justify-between border-b border-[#CBD5DD] pb-3">
+        <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 shadow-xs space-y-4 min-h-[500px]">
+          <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-[#EAAA00]" />
-              <h3 className="text-sm font-bold text-[#3A0F34]">
+              <Sparkles className="h-4 w-4 text-white" />
+              <h3 className="text-sm font-bold text-white">
                 AI Solution & Algorithmic Analysis
               </h3>
             </div>
@@ -461,19 +455,19 @@ export const CodingLabView: React.FC<CodingLabViewProps> = ({
             {extractedCode && (
               <button
                 onClick={() => handleCopyCode(extractedCode)}
-                className="inline-flex items-center gap-1.5 rounded-md bg-[#DDE3E8] px-2.5 py-1 text-xs font-semibold text-[#3A0F34] hover:bg-[#CBD5DD] transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs font-semibold text-white hover:bg-white/10 transition-colors cursor-pointer"
               >
-                {copiedCode ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+                {copiedCode ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
                 <span>{copiedCode ? "Copied" : "Copy Solution"}</span>
               </button>
             )}
           </div>
 
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-24 text-[#58505C] space-y-3">
-              <Loader2 className="h-8 w-8 animate-spin text-[#EAAA00]" />
-              <p className="text-xs font-semibold">
-                Running algorithmic analysis with {settings?.activeProvider || "Gemini"}...
+            <div className="flex flex-col items-center justify-center py-24 text-[#737373] space-y-3">
+              <Loader2 className="h-8 w-8 animate-spin text-white" />
+              <p className="text-xs font-semibold text-white/80">
+                Running algorithmic analysis with {settings?.activeProviderName || settings?.activeProvider || "Gemini"}...
               </p>
             </div>
           ) : aiOutput ? (
@@ -481,22 +475,22 @@ export const CodingLabView: React.FC<CodingLabViewProps> = ({
               {/* Complexity Badges if extracted */}
               {complexity && (
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-lg bg-[#F4F7F9] p-3 border border-[#CBD5DD]">
-                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#58505C] uppercase">
-                      <Clock className="h-3.5 w-3.5 text-[#3A0F34]" />
+                  <div className="rounded-xl bg-white/[0.03] p-3 border border-white/[0.08]">
+                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#737373] uppercase">
+                      <Clock className="h-3.5 w-3.5 text-white" />
                       Time Complexity
                     </div>
-                    <div className="mt-1 font-mono text-sm font-bold text-[#3A0F34]">
+                    <div className="mt-1 font-mono text-sm font-bold text-white">
                       {complexity.time || "O(n)"}
                     </div>
                   </div>
 
-                  <div className="rounded-lg bg-[#F4F7F9] p-3 border border-[#CBD5DD]">
-                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#58505C] uppercase">
-                      <Layers className="h-3.5 w-3.5 text-[#3A0F34]" />
+                  <div className="rounded-xl bg-white/[0.03] p-3 border border-white/[0.08]">
+                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#737373] uppercase">
+                      <Layers className="h-3.5 w-3.5 text-white" />
                       Space Complexity
                     </div>
-                    <div className="mt-1 font-mono text-sm font-bold text-[#3A0F34]">
+                    <div className="mt-1 font-mono text-sm font-bold text-white">
                       {complexity.space || "O(1)"}
                     </div>
                   </div>
@@ -505,12 +499,12 @@ export const CodingLabView: React.FC<CodingLabViewProps> = ({
 
               {/* Edge Cases List */}
               {edgeCases && edgeCases.length > 0 && (
-                <div className="rounded-lg bg-amber-50/60 p-3.5 border border-amber-200 space-y-1.5">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-amber-900">
-                    <ShieldAlert className="h-3.5 w-3.5 text-amber-700" />
+                <div className="rounded-xl bg-amber-500/10 p-3.5 border border-amber-500/20 space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-amber-300">
+                    <ShieldAlert className="h-3.5 w-3.5 text-amber-400" />
                     Crucial Edge Cases
                   </div>
-                  <ul className="list-disc list-inside text-xs text-amber-900 space-y-1">
+                  <ul className="list-disc list-inside text-xs text-amber-200/90 space-y-1">
                     {edgeCases.map((ec, i) => (
                       <li key={i}>{ec}</li>
                     ))}
@@ -519,14 +513,14 @@ export const CodingLabView: React.FC<CodingLabViewProps> = ({
               )}
 
               {/* Full Formatted AI Text Output */}
-              <div className="rounded-lg bg-[#F4F7F9] p-4 text-xs font-mono leading-relaxed text-[#1F1722] whitespace-pre-wrap overflow-x-auto max-h-[500px]">
+              <div className="rounded-xl border border-white/[0.06] bg-black/40 p-4 text-xs font-mono leading-relaxed text-white/90 whitespace-pre-wrap overflow-x-auto max-h-[500px]">
                 {aiOutput}
               </div>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-24 text-center text-[#58505C] space-y-2">
-              <Code2 className="h-10 w-10 text-[#CBD5DD]" />
-              <h4 className="text-sm font-semibold text-[#1F1722]">Ready for problem analysis</h4>
+            <div className="flex flex-col items-center justify-center py-24 text-center text-[#737373] space-y-2">
+              <Code2 className="h-10 w-10 text-[#555]" />
+              <h4 className="text-sm font-semibold text-white">Ready for problem analysis</h4>
               <p className="text-xs max-w-sm">
                 Choose an action from the toolbar to solve the problem, debug defects, inspect Big-O complexities, or perform a rigorous code review.
               </p>

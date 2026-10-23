@@ -34,7 +34,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onNavigate,
   isLoading = false,
 }) => {
-  // Compute real activity metrics
   const totalSessions = sessions.length;
   const totalDurationSeconds = sessions.reduce((acc, s) => acc + (s.durationSeconds || 0), 0);
   const totalMinutes = Math.round(totalDurationSeconds / 60);
@@ -44,32 +43,32 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   return (
     <div className="space-y-8">
       {/* Welcome Banner with Official Savala Mascot */}
-      <div className="relative overflow-hidden rounded-2xl bg-[#3A0F34] p-6 sm:p-8 text-white shadow-sm border border-[#3A0F34] flex flex-col md:flex-row items-center justify-between gap-6">
+      <div className="relative overflow-hidden rounded-2xl border border-white/[0.12] bg-[#121212]/90 backdrop-blur-2xl p-6 sm:p-8 text-white shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="relative z-10 max-w-2xl space-y-4">
-          <div className="inline-flex items-center gap-2 rounded-full bg-[#EAAA00]/20 px-3 py-1 text-xs font-semibold text-[#EAAA00] border border-[#EAAA00]/30">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-white">
             <Sparkles className="h-3.5 w-3.5" />
-            <span>AI Interview & Technical Readiness Workspace</span>
+            <span>AI Live Interview & Technical Readiness Copilot</span>
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
             Welcome back, {user?.name?.split(" ")[0] || "Candidate"}!
           </h1>
-          <p className="text-sm sm:text-base text-[#DDE3E8]/90 leading-relaxed">
-            Practice realistic mock interview questions with microphone audio recording, solve algorithmic challenges in the Coding Lab, and analyze your resume for targeted technical questions.
+          <p className="text-sm sm:text-base text-[#A3A3A3] leading-relaxed">
+            Real-time live interview assistance with speech detection, instant structured answers in English & Malayalam, algorithmic practice in the Coding Lab, and multi-provider AI key management.
           </p>
 
           <div className="flex flex-wrap items-center gap-3 pt-2">
             <button
               onClick={() => onNavigate("meeting")}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#EAAA00] px-5 py-3 text-sm font-bold text-[#270A23] shadow-sm hover:bg-[#CF9400] transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-[#080808] shadow-xs hover:bg-[#E5E5E5] transition-all cursor-pointer"
             >
               <Video className="h-4 w-4" />
-              <span>Launch Meeting Copilot</span>
+              <span>Launch Live Copilot</span>
             </button>
 
             <button
               onClick={() => onNavigate("practice")}
-              className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white hover:bg-white/15 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-white hover:bg-white/10 transition-colors cursor-pointer"
             >
               <Mic className="h-4 w-4" />
               <span>Practice Room</span>
@@ -77,7 +76,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
             <button
               onClick={() => onNavigate("coding")}
-              className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white hover:bg-white/15 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-white hover:bg-white/10 transition-colors cursor-pointer"
             >
               <Code2 className="h-4 w-4" />
               <span>Coding Lab</span>
@@ -87,24 +86,24 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
         {/* Mascot Character Showcase */}
         <div className="relative z-10 flex-shrink-0 flex flex-col items-center">
-          <div className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-3xl bg-white/10 border-2 border-[#EAAA00]/40 p-3 shadow-xl backdrop-blur-xs flex items-center justify-center transform hover:scale-105 transition-transform">
+          <div className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-3xl bg-white/[0.04] border border-white/20 p-3 shadow-2xl backdrop-blur-md flex items-center justify-center transform hover:scale-105 transition-transform">
             <Image
               src="/logo.png"
-              alt="Savala AI Samurai Mascot"
+              alt="Savala AI Ninja Mascot"
               width={160}
               height={160}
               className="w-full h-full object-contain filter drop-shadow-md"
               priority
             />
           </div>
-          <span className="mt-2 text-[11px] font-bold tracking-wider text-[#EAAA00] uppercase bg-black/30 px-2.5 py-0.5 rounded-full border border-[#EAAA00]/20">
+          <span className="mt-2 text-[11px] font-bold tracking-wider text-[#A3A3A3] uppercase bg-white/5 px-2.5 py-0.5 rounded-full border border-white/10">
             Savala Ninja Sensei
           </span>
         </div>
 
-        {/* Ambient background decoration */}
+        {/* Subtle Ambient Glow */}
         <div
-          className="absolute -right-12 -bottom-16 h-64 w-64 rounded-full bg-[#EAAA00]/10 blur-3xl pointer-events-none"
+          className="absolute -right-12 -bottom-16 h-64 w-64 rounded-full bg-white/[0.03] blur-3xl pointer-events-none"
           aria-hidden="true"
         />
       </div>
@@ -112,75 +111,75 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* Metrics Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Metric 1 */}
-        <div className="rounded-xl border border-[#CBD5DD] bg-white p-5 shadow-xs">
+        <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-[#58505C]">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#737373]">
               Total Sessions
             </span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#DDE3E8]/60 text-[#3A0F34]">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white">
               <Clock className="h-4 w-4" />
             </div>
           </div>
-          <div className="mt-3 text-2xl font-bold text-[#1F1722]">{totalSessions}</div>
-          <span className="text-xs text-[#58505C] mt-1 block">
-            {interviewSessions} Mock Interviews · {codingSessions} Coding Labs
+          <div className="mt-3 text-2xl font-bold text-white">{totalSessions}</div>
+          <span className="text-xs text-[#737373] mt-1 block">
+            {interviewSessions} Interviews · {codingSessions} Coding Labs
           </span>
         </div>
 
         {/* Metric 2 */}
-        <div className="rounded-xl border border-[#CBD5DD] bg-white p-5 shadow-xs">
+        <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-[#58505C]">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#737373]">
               Speaking Time
             </span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#DDE3E8]/60 text-[#3A0F34]">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white">
               <Mic className="h-4 w-4" />
             </div>
           </div>
-          <div className="mt-3 text-2xl font-bold text-[#1F1722]">{totalMinutes} min</div>
-          <span className="text-xs text-[#58505C] mt-1 block">
+          <div className="mt-3 text-2xl font-bold text-white">{totalMinutes} min</div>
+          <span className="text-xs text-[#737373] mt-1 block">
             Total recorded practice duration
           </span>
         </div>
 
         {/* Metric 3 */}
-        <div className="rounded-xl border border-[#CBD5DD] bg-white p-5 shadow-xs">
+        <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-[#58505C]">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#737373]">
               Resume Status
             </span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#DDE3E8]/60 text-[#3A0F34]">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white">
               <FileText className="h-4 w-4" />
             </div>
           </div>
-          <div className="mt-3 text-xl font-bold text-[#1F1722] flex items-center gap-2">
+          <div className="mt-3 text-xl font-bold text-white flex items-center gap-2">
             {resume ? (
-              <span className="text-emerald-700 flex items-center gap-1.5 text-base">
+              <span className="text-emerald-400 flex items-center gap-1.5 text-base">
                 <CheckCircle2 className="h-4 w-4" /> Parsed & Active
               </span>
             ) : (
-              <span className="text-[#58505C] text-base">Not Uploaded</span>
+              <span className="text-[#737373] text-base">Not Uploaded</span>
             )}
           </div>
-          <span className="text-xs text-[#58505C] mt-1 block">
+          <span className="text-xs text-[#737373] mt-1 block">
             {resume ? `${resume.parsedSkills?.length || 0} skills indexed` : "Upload PDF to generate questions"}
           </span>
         </div>
 
         {/* Metric 4 */}
-        <div className="rounded-xl border border-[#CBD5DD] bg-white p-5 shadow-xs">
+        <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-[#58505C]">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#737373]">
               AI Provider
             </span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#DDE3E8]/60 text-[#3A0F34]">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white">
               <Sparkles className="h-4 w-4" />
             </div>
           </div>
-          <div className="mt-3 text-2xl font-bold text-[#1F1722] capitalize">
-            {settings?.activeProvider || "Gemini"}
+          <div className="mt-3 text-2xl font-bold text-white capitalize">
+            {settings?.activeProviderName || settings?.activeProvider || "Gemini"}
           </div>
-          <span className="text-xs text-[#58505C] mt-1 block truncate">
+          <span className="text-xs text-[#737373] mt-1 block truncate font-mono">
             Model: {settings?.preferredModel || "gemini-2.5-flash"}
           </span>
         </div>
@@ -192,13 +191,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-bold text-[#3A0F34]">Recent Practice Sessions</h2>
-              <p className="text-xs text-[#58505C]">Persisted history of your interview simulations and coding labs</p>
+              <h2 className="text-lg font-bold text-white">Recent Practice Sessions</h2>
+              <p className="text-xs text-[#737373]">Persisted history of your interview simulations and coding labs</p>
             </div>
             {sessions.length > 0 && (
               <button
                 onClick={() => onNavigate("history")}
-                className="text-xs font-semibold text-[#3A0F34] hover:text-[#EAAA00] flex items-center gap-1 transition-colors"
+                className="text-xs font-semibold text-[#A3A3A3] hover:text-white flex items-center gap-1 transition-colors cursor-pointer"
               >
                 <span>View All</span>
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -207,23 +206,23 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
 
           {isLoading ? (
-            <div className="rounded-xl border border-[#CBD5DD] bg-white p-12 text-center text-sm text-[#58505C]">
+            <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-12 text-center text-sm text-[#737373]">
               Loading sessions...
             </div>
           ) : sessions.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-[#CBD5DD] bg-white p-10 text-center space-y-4">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#DDE3E8]/50 text-[#3A0F34]">
-                <Mic className="h-6 w-6" />
+            <div className="rounded-xl border border-dashed border-white/[0.12] bg-white/[0.01] p-10 text-center space-y-4">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white/5 text-white">
+                <Mic className="h-6 w-6 text-[#A3A3A3]" />
               </div>
               <div>
-                <h3 className="font-semibold text-[#1F1722]">No practice sessions recorded yet</h3>
-                <p className="text-xs text-[#58505C] max-w-sm mx-auto mt-1">
+                <h3 className="font-semibold text-white">No practice sessions recorded yet</h3>
+                <p className="text-xs text-[#737373] max-w-sm mx-auto mt-1">
                   Start your first mock interview with live speech recording or open the coding lab to debug code.
                 </p>
               </div>
               <button
                 onClick={() => onNavigate("practice")}
-                className="inline-flex items-center gap-2 rounded-lg bg-[#EAAA00] px-4 py-2 text-xs font-bold text-[#270A23] hover:bg-[#CF9400] transition-colors"
+                className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-xs font-bold text-black hover:bg-[#E5E5E5] transition-colors cursor-pointer"
               >
                 <PlusCircle className="h-4 w-4" />
                 <span>Begin Your First Practice</span>
@@ -235,10 +234,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <div
                   key={session.id}
                   onClick={() => onNavigate("history")}
-                  className="group flex items-center justify-between rounded-xl border border-[#CBD5DD] bg-white p-4 shadow-xs hover:border-[#3A0F34] hover:shadow-sm cursor-pointer transition-all"
+                  className="group flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 shadow-xs hover:border-white/30 hover:bg-white/[0.04] cursor-pointer transition-all"
                 >
                   <div className="flex items-center gap-3.5 min-w-0">
-                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-[#DDE3E8]/60 text-[#3A0F34] group-hover:bg-[#3A0F34] group-hover:text-white transition-colors">
+                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-white/10 text-white group-hover:bg-white group-hover:text-black transition-colors">
                       {session.sessionType === "coding" ? (
                         <Code2 className="h-5 w-5" />
                       ) : (
@@ -247,14 +246,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <h4 className="truncate text-sm font-semibold text-[#1F1722]">
+                        <h4 className="truncate text-sm font-semibold text-white">
                           {session.title}
                         </h4>
-                        <span className="rounded-md bg-[#DDE3E8] px-2 py-0.5 text-[10px] font-medium text-[#3A0F34] capitalize">
+                        <span className="rounded-md bg-white/10 px-2 py-0.5 text-[10px] font-medium text-[#A3A3A3] capitalize">
                           {session.sessionType}
                         </span>
                       </div>
-                      <p className="truncate text-xs text-[#58505C] mt-0.5">
+                      <p className="truncate text-xs text-[#737373] mt-0.5">
                         {session.transcriptText
                           ? session.transcriptText.substring(0, 80) + "..."
                           : session.targetRole || "Session notes available"}
@@ -263,14 +262,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   </div>
 
                   <div className="text-right flex-shrink-0 pl-3">
-                    <span className="text-xs text-[#58505C]">
+                    <span className="text-xs text-[#737373]">
                       {new Date(session.createdAt).toLocaleDateString(undefined, {
                         month: "short",
                         day: "numeric",
                       })}
                     </span>
                     {session.durationSeconds > 0 && (
-                      <span className="block text-[11px] font-medium text-[#3A0F34]">
+                      <span className="block text-[11px] font-medium text-[#A3A3A3]">
                         {Math.floor(session.durationSeconds / 60)}m {session.durationSeconds % 60}s
                       </span>
                     )}
@@ -284,41 +283,41 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         {/* Right Col: Active Resume & Readiness Card */}
         <div className="space-y-4">
           <div>
-            <h2 className="text-lg font-bold text-[#3A0F34]">Resume & Readiness</h2>
-            <p className="text-xs text-[#58505C]">Tailor mock questions to your background</p>
+            <h2 className="text-lg font-bold text-white">Resume & Readiness</h2>
+            <p className="text-xs text-[#737373]">Tailor mock questions to your background</p>
           </div>
 
-          <div className="rounded-xl border border-[#CBD5DD] bg-white p-5 shadow-xs space-y-4">
+          <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 shadow-xs space-y-4">
             {resume ? (
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                     <FileCheck2 className="h-5 w-5" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h4 className="truncate text-sm font-bold text-[#1F1722]">{resume.fileName}</h4>
-                    <span className="text-[11px] text-[#58505C]">
+                    <h4 className="truncate text-sm font-bold text-white">{resume.fileName}</h4>
+                    <span className="text-[11px] text-[#737373]">
                       {(resume.fileSizeBytes / 1024).toFixed(1)} KB · Analyzed
                     </span>
                   </div>
                 </div>
 
                 {resume.parsedSummary && (
-                  <p className="text-xs text-[#58505C] leading-relaxed line-clamp-3">
+                  <p className="text-xs text-[#A3A3A3] leading-relaxed line-clamp-3">
                     {resume.parsedSummary}
                   </p>
                 )}
 
                 {resume.parsedSkills && resume.parsedSkills.length > 0 && (
                   <div>
-                    <div className="text-[11px] font-semibold uppercase tracking-wider text-[#58505C] mb-2">
+                    <div className="text-[11px] font-semibold uppercase tracking-wider text-[#737373] mb-2">
                       Key Competencies
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       {resume.parsedSkills.slice(0, 8).map((skill, i) => (
                         <span
                           key={i}
-                          className="rounded-md bg-[#DDE3E8] px-2 py-0.5 text-[11px] font-medium text-[#3A0F34]"
+                          className="rounded-md bg-white/10 px-2 py-0.5 text-[11px] font-medium text-[#A3A3A3]"
                         >
                           {skill}
                         </span>
@@ -329,7 +328,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
                 <button
                   onClick={() => onNavigate("resume")}
-                  className="w-full flex items-center justify-center gap-2 rounded-lg border border-[#CBD5DD] py-2 text-xs font-semibold text-[#3A0F34] hover:bg-[#F4F7F9] transition-colors"
+                  className="w-full flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] py-2 text-xs font-semibold text-white hover:bg-white/10 transition-colors cursor-pointer"
                 >
                   <FileText className="h-3.5 w-3.5" />
                   <span>Inspect Full Resume Analysis</span>
@@ -337,20 +336,20 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </div>
             ) : (
               <div className="text-center py-4 space-y-3">
-                <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-[#DDE3E8]/60 text-[#3A0F34]">
-                  <FileText className="h-5 w-5" />
+                <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-white/5 text-white">
+                  <FileText className="h-5 w-5 text-[#A3A3A3]" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-[#1F1722]">No resume uploaded</h4>
-                  <p className="text-xs text-[#58505C] mt-1">
+                  <h4 className="text-sm font-semibold text-white">No resume uploaded</h4>
+                  <p className="text-xs text-[#737373] mt-1">
                     Upload your PDF resume to extract skills and automatically generate tailored mock questions.
                   </p>
                 </div>
                 <button
                   onClick={() => onNavigate("resume")}
-                  className="inline-flex items-center gap-2 rounded-lg bg-[#3A0F34] px-4 py-2 text-xs font-semibold text-white hover:bg-[#270A23] transition-colors"
+                  className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-xs font-bold text-black hover:bg-[#E5E5E5] transition-colors cursor-pointer"
                 >
-                  <PlusCircle className="h-3.5 w-3.5 text-[#EAAA00]" />
+                  <PlusCircle className="h-3.5 w-3.5" />
                   <span>Upload Resume (PDF)</span>
                 </button>
               </div>
