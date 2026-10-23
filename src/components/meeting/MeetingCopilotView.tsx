@@ -34,6 +34,44 @@ import {
 import { parseAndValidateMeetingUrl, MeetingUrlInfo } from "@/lib/copilot/meetingUrl";
 import { extractQuestionsFromTranscript } from "@/lib/copilot/questionDetector";
 
+export function formatAudioErrorMessage(err: unknown, source: MeetingAudioSource): string {
+  const errorName = err instanceof Error ? err.name : "";
+  const errorMessage = err instanceof Error ? err.message : String(err || "");
+
+  if (
+    errorName === "NotFoundError" ||
+    errorMessage.includes("The object can not be found here") ||
+    errorMessage.includes("Requested device not found") ||
+    errorMessage.includes("device not found") ||
+    errorMessage.includes("NotFoundError")
+  ) {
+    if (source === "microphone") {
+      return "No microphone or audio input hardware detected on your computer. Please connect a microphone or headset, check Windows sound device settings, or switch to 'Live Transcript / Manual Input' mode below.";
+    } else {
+      return "No audio source was found to capture. When sharing your tab or screen, please ensure you check 'Share tab audio'.";
+    }
+  }
+
+  if (
+    errorName === "NotAllowedError" ||
+    errorName === "PermissionDeniedError" ||
+    errorMessage.includes("Permission denied") ||
+    errorMessage.includes("not allowed")
+  ) {
+    return "Microphone permission was denied. Please allow microphone access in your browser address bar (click the lock/permissions icon) and retry.";
+  }
+
+  if (errorName === "NotReadableError" || errorName === "TrackStartError" || errorMessage.includes("concurrent")) {
+    return "Microphone is currently in use by another program (e.g. Teams, Zoom, or another browser window). Please close other applications using your audio device and try again.";
+  }
+
+  if (errorName === "OverconstrainedError") {
+    return "Your microphone does not support the requested advanced audio settings. Please try connecting in standard audio mode.";
+  }
+
+  return errorMessage || "Could not connect meeting audio. Please check your audio settings.";
+}
+
 interface MeetingCopilotViewProps {
   settings: UserSettingsData | null;
   resume: ResumeData | null;
@@ -71,6 +109,7 @@ export const MeetingCopilotView: React.FC<MeetingCopilotViewProps> = ({
 
   // Media Streams & Recognition Refs
   const mediaStreamRef = useRef<MediaStream | null>(null);
+  const chunkRecorderRef = useRef<MediaRecorder | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recognitionRef = useRef<any>(null);
   const isPausedRef = useRef<boolean>(false);
@@ -85,6 +124,16 @@ export const MeetingCopilotView: React.FC<MeetingCopilotViewProps> = ({
     if (mediaStreamRef.current) {
       mediaStreamRef.current.getTracks().forEach((track) => track.stop());
       mediaStreamRef.current = null;
+    }
+    if (chunkRecorderRef.current) {
+      try {
+        if (chunkRecorderRef.current.state !== "inactive") {
+          chunkRecorderRef.current.stop();
+        }
+      } catch {
+        // Ignore
+      }
+      chunkRecorderRef.current = null;
     }
     if (recognitionRef.current) {
       try {
@@ -216,17 +265,69 @@ export const MeetingCopilotView: React.FC<MeetingCopilotViewProps> = ({
     [generateAnswerForQuestion]
   );
 
-  // Connect Audio Session (Tab Audio or Microphone)
+  // Start Chunked Audio Transcription using MediaRecorder + Whisper API (Fallback for Firefox / browsers without Web Speech API)
+  const startChunkedAudioTranscription = useCallback(
+    (stream: MediaStream) => {
+      try {
+        const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+          ? "audio/webm;codecs=opus"
+          : MediaRecorder.isTypeSupported("audio/webm")
+          ? "audio/webm"
+          : MediaRecorder.isTypeSupported("audio/mp4")
+          ? "audio/mp4"
+          : "";
+
+        const options: MediaRecorderOptions = mimeType ? { mimeType } : {};
+        const recorder = new MediaRecorder(stream, options);
+        chunkRecorderRef.current = recorder;
+
+        recorder.ondataavailable = async (e) => {
+          if (e.data && e.data.size > 1000 && !isPausedRef.current) {
+            try {
+              const formData = new FormData();
+              formData.append("file", e.data, "chunk.webm");
+              formData.append("language", speechLanguage === "ml-IN" ? "ml" : "en");
+
+              const res = await fetch("/api/transcribe", {
+                method: "POST",
+                body: formData,
+              });
+              const data = await res.json();
+              if (res.ok && data.success && data.transcript?.trim()) {
+                processLiveTranscriptText(data.transcript);
+              }
+            } catch (transcribeErr) {
+              console.warn("Chunk transcription warning:", transcribeErr);
+            }
+          }
+        };
+
+        // Slice into 5-second intervals for responsive live meeting transcription
+        recorder.start(5000);
+      } catch (recorderErr) {
+        console.warn("Could not start chunked media recorder:", recorderErr);
+      }
+    },
+    [speechLanguage, processLiveTranscriptText]
+  );
+
+  // Connect Audio Session (Tab Audio, Microphone, or Manual Transcript)
   const startMeetingCapture = async () => {
     setConnectionError(null);
     setConnectionStatus("connecting");
     isPausedRef.current = false;
 
+    // 1. Manual transcript mode requires no hardware media stream
+    if (audioSource === "manual_transcript") {
+      setConnectionStatus("connected");
+      return;
+    }
+
     try {
       if (audioSource === "tab_audio") {
         // Tab Audio via getDisplayMedia
         if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
-          throw new Error("Your browser does not support getDisplayMedia tab audio capture. Please use Chrome or Edge.");
+          throw new Error("Your browser does not support getDisplayMedia tab audio capture. Please use Chrome or Edge for tab audio capture.");
         }
 
         const stream = await navigator.mediaDevices.getDisplayMedia({
@@ -251,23 +352,56 @@ export const MeetingCopilotView: React.FC<MeetingCopilotViewProps> = ({
           throw new Error("Your browser does not support getUserMedia microphone capture.");
         }
 
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: {
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true,
-          },
-        });
+        // Check if audio input devices are detected
+        if (navigator.mediaDevices.enumerateDevices) {
+          try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const hasAudioInput = devices.some((d) => d.kind === "audioinput");
+            if (devices.length > 0 && !hasAudioInput) {
+              const notFoundErr = new Error("The object can not be found here.");
+              notFoundErr.name = "NotFoundError";
+              throw notFoundErr;
+            }
+          } catch (enumErr: unknown) {
+            if (enumErr instanceof Error && (enumErr.name === "NotFoundError" || enumErr.message.includes("not found"))) {
+              throw enumErr;
+            }
+          }
+        }
+
+        let stream: MediaStream | null = null;
+        try {
+          // Attempt with enhanced voice constraints
+          stream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true,
+            },
+          });
+        } catch (firstErr: unknown) {
+          const isNotFound = firstErr instanceof Error && (firstErr.name === "NotFoundError" || firstErr.message.includes("The object can not be found here"));
+          if (isNotFound) {
+            throw firstErr;
+          }
+          // Retry with basic audio constraint in case strict constraints failed
+          try {
+            stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          } catch {
+            throw firstErr;
+          }
+        }
+
         mediaStreamRef.current = stream;
       }
 
-      // Initialize Web Speech Recognition
+      // Initialize speech recognition (Web Speech API or MediaRecorder Whisper fallback)
       startSpeechRecognition();
       setConnectionStatus("connected");
     } catch (err: unknown) {
       stopAllAudioTracks();
-      const message = err instanceof Error ? err.message : "Failed to connect meeting audio.";
-      setConnectionError(message);
+      const friendlyMessage = formatAudioErrorMessage(err, audioSource);
+      setConnectionError(friendlyMessage);
       setConnectionStatus("error");
     }
   };
@@ -277,9 +411,11 @@ export const MeetingCopilotView: React.FC<MeetingCopilotViewProps> = ({
     const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
     if (!SpeechRecognitionAPI) {
-      setConnectionError(
-        "Web Speech Recognition API is not supported in this browser. Please use Chrome or Edge for live real-time speech-to-text."
-      );
+      // In browsers without native SpeechRecognition (like Firefox), fallback to Whisper chunked recording if stream is active
+      if (mediaStreamRef.current && typeof MediaRecorder !== "undefined") {
+        startChunkedAudioTranscription(mediaStreamRef.current);
+        return;
+      }
       return;
     }
 
@@ -319,8 +455,10 @@ export const MeetingCopilotView: React.FC<MeetingCopilotViewProps> = ({
       recognition.start();
       recognitionRef.current = recognition;
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Speech recognition start failed";
-      console.error(message);
+      console.warn("Speech recognition initialization fallback:", err);
+      if (mediaStreamRef.current && typeof MediaRecorder !== "undefined") {
+        startChunkedAudioTranscription(mediaStreamRef.current);
+      }
     }
   };
 
@@ -335,12 +473,26 @@ export const MeetingCopilotView: React.FC<MeetingCopilotViewProps> = ({
           // Ignore
         }
       }
+      if (chunkRecorderRef.current && chunkRecorderRef.current.state === "recording") {
+        try {
+          chunkRecorderRef.current.pause();
+        } catch {
+          // Ignore
+        }
+      }
     } else if (connectionStatus === "paused") {
       isPausedRef.current = false;
       setConnectionStatus("connected");
       if (recognitionRef.current) {
         try {
           recognitionRef.current.start();
+        } catch {
+          // Ignore
+        }
+      }
+      if (chunkRecorderRef.current && chunkRecorderRef.current.state === "paused") {
+        try {
+          chunkRecorderRef.current.resume();
         } catch {
           // Ignore
         }
@@ -576,9 +728,38 @@ export const MeetingCopilotView: React.FC<MeetingCopilotViewProps> = ({
 
         {/* Connection Controls & Errors */}
         {connectionError && (
-          <div className="rounded-lg bg-red-50 p-3 text-xs text-red-800 border border-red-200 flex items-start gap-2">
-            <AlertCircle className="h-4 w-4 text-red-600 flex-shrink-0 mt-0.5" />
-            <div>{connectionError}</div>
+          <div className="rounded-xl bg-red-50 p-4 text-xs text-red-900 border border-red-200 space-y-2.5">
+            <div className="flex items-start gap-2.5">
+              <AlertCircle className="h-4 w-4 text-red-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1 space-y-1">
+                <span className="font-bold text-red-950">Audio Hardware / Connection Notice</span>
+                <p className="leading-relaxed text-red-800">{connectionError}</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-red-200/60">
+              <button
+                type="button"
+                onClick={() => {
+                  setAudioSource("manual_transcript");
+                  setConnectionError(null);
+                  setConnectionStatus("connected");
+                }}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-[#3A0F34] px-3.5 py-1.5 text-[11px] font-bold text-white hover:bg-[#270A23] transition-colors cursor-pointer shadow-xs"
+              >
+                <Sparkles className="h-3.5 w-3.5 text-[#EAAA00]" />
+                Switch to Live Transcript / Manual Input Mode
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setConnectionError(null);
+                  startMeetingCapture();
+                }}
+                className="inline-flex items-center gap-1 rounded-lg border border-red-300 bg-white px-3 py-1.5 text-[11px] font-semibold text-red-800 hover:bg-red-100/50 transition-colors cursor-pointer"
+              >
+                Retry Audio Connection
+              </button>
+            </div>
           </div>
         )}
 

@@ -182,4 +182,54 @@ test("Savala AI - Suite", async (t) => {
     assert.ok(userPrompt.includes(resumeText));
     assert.ok(userPrompt.includes("Candidate's Actual Resume Background"));
   });
+
+  await t.test("Live Meeting Copilot - Audio Error Formatting & Device Fallback", async () => {
+    const formatAudioErrorMessage = (err, source) => {
+      const errorName = err?.name || "";
+      const errorMessage = err?.message || String(err || "");
+
+      if (
+        errorName === "NotFoundError" ||
+        errorMessage.includes("The object can not be found here") ||
+        errorMessage.includes("Requested device not found") ||
+        errorMessage.includes("device not found") ||
+        errorMessage.includes("NotFoundError")
+      ) {
+        if (source === "microphone") {
+          return "No microphone or audio input hardware detected on your computer. Please connect a microphone or headset, check Windows sound device settings, or switch to 'Live Transcript / Manual Input' mode below.";
+        } else {
+          return "No audio source was found to capture. When sharing your tab or screen, please ensure you check 'Share tab audio'.";
+        }
+      }
+
+      if (
+        errorName === "NotAllowedError" ||
+        errorName === "PermissionDeniedError" ||
+        errorMessage.includes("Permission denied") ||
+        errorMessage.includes("not allowed")
+      ) {
+        return "Microphone permission was denied. Please allow microphone access in your browser address bar (click the lock/permissions icon) and retry.";
+      }
+
+      return errorMessage;
+    };
+
+    // Firefox NotFoundError DOMException
+    const firefoxError = new Error("The object can not be found here.");
+    firefoxError.name = "NotFoundError";
+    const formattedFirefox = formatAudioErrorMessage(firefoxError, "microphone");
+    assert.ok(formattedFirefox.includes("No microphone or audio input hardware detected"));
+    assert.ok(formattedFirefox.includes("Manual Input"));
+
+    // Chrome NotFoundError DOMException
+    const chromeError = new Error("Requested device not found");
+    chromeError.name = "NotFoundError";
+    const formattedChrome = formatAudioErrorMessage(chromeError, "microphone");
+    assert.ok(formattedChrome.includes("No microphone or audio input hardware detected"));
+
+    // Tab audio missing track error
+    const tabError = new Error("The object can not be found here.");
+    const formattedTab = formatAudioErrorMessage(tabError, "tab_audio");
+    assert.ok(formattedTab.includes("Share tab audio"));
+  });
 });
