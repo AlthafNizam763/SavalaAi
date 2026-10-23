@@ -6,20 +6,32 @@ Savala AI is a high-performance, browser-based AI interview preparation and codi
 
 ## 🚀 Core Capabilities
 
-1. **AI-Powered Mock Interview Practice Room**
+1. **Live Meeting Interview Copilot (Authorized Real-Time Assistant)**
+   - **Meeting Workspace & URL Validation**: Enter and validate Google Meet (`meet.google.com`) or Microsoft Teams (`teams.microsoft.com`) links with real-time feedback and supported connection workflows.
+   - **Supported Audio Capture**:
+     - *Browser Tab Audio*: Captures live interviewer speech directly from the meeting tab via `getDisplayMedia` with tab audio sharing.
+     - *Microphone Mode*: Captures room and speaker audio via `getUserMedia`.
+     - *Manual Input Stream*: Type or paste questions directly for instant answer generation.
+   - **Multilingual Live Transcription**: Supports real-time English and Malayalam (`മലയാളം`) speech-to-text with continuous timestamps and segment streaming.
+   - **Smart Question Detection & Deduplication**: Real-time parsing of interviewer questions with word-overlap deduplication algorithms to prevent duplicate questions from overlapping speech segments.
+   - **Resume-Grounded AI Answers**: Live suggested answers generated in English, Malayalam, or Malayalam-English mixed (**Manglish**), strictly grounded in the candidate's verified resume without hallucinating work history. Covers Node.js, Express, React, Next.js, PHP, Laravel, CodeIgniter, REST APIs, MongoDB, and SQL.
+   - **Clear Status & Controls**: Explicit connection states (Disconnected, Active, Paused), Start/Pause/Stop/Clear controls, and audio stream lifecycles.
+   - **Screen-Sharing & Privacy Transparency**: Built-in advisory explaining window sharing vs. entire screen visibility. Complies strictly with meeting platform policies; no stealth overlays, no deceptive concealment of AI assistance.
+
+2. **AI-Powered Mock Interview Practice Room**
    - Microphone recording with browser `MediaRecorder` and `getUserMedia` APIs.
    - Recording timer, audio wave visualization, and permission lifecycle handling.
    - Speech-to-text transcription adapter (OpenAI Whisper API).
    - Editable transcript panel with instant word count, copy, clear, and persistence.
    - AI interview coaching: answer evaluation, STAR-format model answers, and deep-dive technical concept breakdowns.
 
-2. **Coding Lab Assistant**
+3. **Coding Lab Assistant**
    - Interactive code editor with line numbers and monospace styling.
    - Multi-language support: **TypeScript, JavaScript, Python, Java, SQL, PHP**.
    - One-click actions: **Solve Problem**, **Debug Code**, **Explain Code**, and **Review Code**.
    - Algorithmic analysis with **Time Complexity** ($O$), **Space Complexity**, **Edge Cases**, and suggested unit tests.
 
-3. **My Resume Management**
+4. **My Resume Management**
    - In-memory PDF and TXT file parsing via server-side `unpdf`.
    - File size limits (up to 10MB) and MIME type validation.
    - Automatic extraction of candidate technical summary and core competency tags.
@@ -27,7 +39,7 @@ Savala AI is a high-performance, browser-based AI interview preparation and codi
    - One-click "Practice in Practice Room" shortcut for every extracted question.
    - Privacy controls: replace resume or permanently delete stored text.
 
-4. **Persistent Session History & Dashboard**
+5. **Persistent Session History & Dashboard**
    - Real metrics: total practice sessions, total speaking minutes, resume status, and active AI engine.
    - Filterable session history (All, Interview, Coding) with details modal.
    - Privacy controls to clear individual sessions or wipe all records.
@@ -159,10 +171,10 @@ npm run build
 
 1. Push code to your Git repository.
 2. Import project into Vercel.
-3. Provision a PostgreSQL database (e.g. Vercel Postgres, Supabase, Neon, or Railway).
+3. Connect your MongoDB Atlas database cluster (`DATABASE_URL`).
 4. Add the environment variables (`DATABASE_URL`, `GEMINI_API_KEY`, `OPENAI_API_KEY`, `AUTH_SECRET`, etc.) in Vercel Project Settings.
 5. In build commands, ensure `prisma generate` is executed (configured automatically via `postinstall` in `package.json`).
-6. Deploy. Note that HTTPS is automatically enabled by Vercel, providing full secure microphone access for browser recording.
+6. Deploy. Note that HTTPS is automatically enabled by Vercel, providing full secure microphone and display media audio access.
 
 ---
 
